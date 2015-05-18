@@ -1,3 +1,18 @@
-== JavaFX Terminal
+== JavaFX Terminal Emulator
 
-Experimental JavaFX Terminal Application
+TerminalFX is a terminal emulator application written in JavaFX 8.
+
+image::images/terminalfx.png[]
+
+== How to run
+
+[source,bash]
+----
+git clone https://github.com/rahmanusta/TerminalFX
+mvn clean install
+mvn exec:java -Dexec.mainClass="com.kodcu.MainApp"
+----
+
+== Licence
+
+MIT

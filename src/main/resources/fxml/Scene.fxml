@@ -10,7 +10,6 @@
   <children>
     <VBox prefHeight="500.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS" VBox.vgrow="ALWAYS" />
-      <TextField fx:id="input" prefHeight="40.0" prefWidth="800.0" />
     </VBox>
   </children>
 </AnchorPane>
