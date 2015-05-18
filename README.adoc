@@ -9,6 +9,7 @@ image::images/terminalfx.png[]
 [source,bash]
 ----
 git clone https://github.com/rahmanusta/TerminalFX
+cd TerminalFX
 mvn clean install
 mvn exec:java -Dexec.mainClass="com.kodcu.MainApp"
 ----
