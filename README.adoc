@@ -1,0 +1,3 @@
+== JavaFX Terminal
+
+Experimental JavaFX Terminal Application
