@@ -1,17 +1,103 @@
+= JavaFX Terminal Emulator
+Rahman Usta
+:doctype: article
+:encoding: utf-8
+:lang: en
+:toc: left
+:numbered:
+:terminalfx-version: 1.1
+
 == JavaFX Terminal Emulator
 
-TerminalFX is a terminal emulator application written in JavaFX 8.
+TerminalFX is a terminal (PTY) emulator application written in JavaFX 8.
 
-image::images/terminalfx.png[]
+We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running process and https://chromium.googlesource.com/apps/libapps/+/master/hterm/[hterm.js] from Chromium project to interact with Pty4J. TerminalFX is using powerful JavaFX WebView component to run hterm.js.
 
-== How to run
+== Features
+
+* Multi OS (Mac, Win, *Nix) Support
+* Terminal Emulator (Xterm)
+* Copy and Paste Support
+* CygWin Support
+* Configurable (Color, Size, Font)
+* Multi Tab Support
+
+== Usage
+
+.Default Config
+[source,java]
+----
+TerminalBuilder terminalBuilder = new TerminalBuilder();
+TerminalTab terminal = terminalBuilder.newTerminal();
+
+TabPane tabPane = new TabPane();
+tabPane.getTabs().add(terminal);    
+----
+
+image::images\default.png[]
+
+.Dark Config
+[source,java]
+----
+TerminalConfig darkConfig = new TerminalConfig();
+darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
+darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
+darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
+
+TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
+TerminalTab terminal = terminalBuilder.newTerminal();
+
+TabPane tabPane = new TabPane();
+tabPane.getTabs().add(terminal);
+----
+
+image::images\dark.png[]
+
+== CygWin Support
+
+[source,java]
+----
+TerminalConfig cygwinConfig = new TerminalConfig();
+cygwinConfig.setWindowsTerminalStarter("C:\\cygwin64\\bin\\bash -i"); <1>
+
+TerminalBuilder terminalBuilder = new TerminalBuilder(cygwinConfig);
+TerminalTab terminal = terminalBuilder.newTerminal();
+
+TabPane tabPane = new TabPane();
+tabPane.getTabs().add(terminal);  
+----
+<1> Set bash in cygwin path
+
+image::images\cygwin.png[]
+
+== Maven Dependency
+
+[source,xml]
+----
+<!-- Add repository -->
+<repositories>
+    <repository>
+    <id>terminalfx-repo</id>
+    <url>https://github.com/rahmanusta/terminalfx/raw/master/releases</url>
+    </repository>
+</repositories>
+
+<!-- Add dependency -->
+<dependency>
+    <groupId>com.asciidocfx</groupId>
+    <artifactId>terminalfx</artifactId>
+    <version>1.1</version>
+</dependency>
+----
+
+== Compile & Run
 
 [source,bash]
 ----
 git clone https://github.com/rahmanusta/TerminalFX
 cd TerminalFX
 mvn clean install
-mvn exec:java -Dexec.mainClass="com.kodcu.MainApp"
+mvn exec:java -Dexec.mainClass="com.terminalfx.AppStarter"
 ----
 
 == Licence

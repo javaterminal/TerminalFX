@@ -1,25 +1,38 @@
-package com.kodcu;
+package com.terminalfx;
 
 import javafx.application.Application;
+
 import static javafx.application.Application.launch;
+
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.io.InputStream;
 
-public class MainApp extends Application {
+
+public class AppStarter extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
-        
+        InputStream sceneStream = getClass().getResourceAsStream("/fxml/Scene.fxml");
+        FXMLLoader loader = new FXMLLoader();
+        Parent root = loader.load(sceneStream);
+
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
-        
+
         stage.setTitle("TerminalFX");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        Platform.exit();
+        System.exit(0);
     }
 
     /**
