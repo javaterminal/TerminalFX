@@ -13,14 +13,7 @@ import java.util.concurrent.Semaphore;
 public class ThreadHelper {
 
     private static final Semaphore uiSemaphore = new Semaphore(1);
-    private static final ExecutorService executorService = Executors.newWorkStealingPool();
     private static final ExecutorService singleExecutorService = Executors.newSingleThreadExecutor();
-
-    public static Future<?> runTaskLater(final Runnable runnable) {
-
-        return executorService.submit(runnable);
-
-    }
 
     // Runs task in JavaFX Thread
     public static void runActionLater(final Runnable runnable) {
