@@ -1,5 +1,7 @@
 package com.terminalfx;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.terminalfx.annotation.WebkitCall;
 import com.terminalfx.config.DefaultTabNameGenerator;
 import com.terminalfx.config.TabNameGenerator;
@@ -25,8 +27,6 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -163,8 +163,29 @@ public class TerminalTab extends Tab {
 
     @WebkitCall(from = "hterm")
     public String getPrefs() {
-        return JsonbBuilder.create()
-                .toJson(getTerminalConfig());
+        try {
+            return new ObjectMapper().writeValueAsString(getTerminalConfig());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updatePrefs(TerminalConfig terminalConfig) {
+
+        if (getTerminalConfig().equals(terminalConfig)) {
+            return;
+        }
+
+        setTerminalConfig(terminalConfig);
+        String prefs = getPrefs();
+
+        ThreadHelper.runActionLater(() -> {
+            try {
+                getWindow().call("updatePrefs", prefs);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, true);
     }
 
     @WebkitCall(from = "hterm")

@@ -45,13 +45,15 @@
     //    t.getPrefs().set("user-css", "/afx/resource/?p=css/hterm.css");
     //    t.getPrefs().set("enable-clipboard-notice",true);
 
-    var prefs = JSON.parse(app.getPrefs());
-
-    for (var key in prefs) {
-        var value = prefs[key];
-        t.getPrefs().set(key, value);
+    function updatePrefs(prefs) {
+        var prefsObject = JSON.parse(prefs);
+        for (var key in prefsObject) {
+            var value = prefsObject[key];
+            t.getPrefs().set(key, value);
+        }
     }
 
+    updatePrefs(app.getPrefs());
 
     t.onTerminalReady = function () {
 
