@@ -108,11 +108,7 @@ public class TerminalTab extends Tab {
             String tabName = getTabNameGenerator().next();
             setText(tabName);
 
-            String htermjs = IOHelper.readResource("/hterm.js");
-            String htermhtml = IOHelper.readResource("/hterm.html");
-            htermhtml = htermhtml.replace("[hterm_js]", htermjs);
-
-            webEngine().loadContent(htermhtml);
+            webEngine().load(TerminalTab.class.getResource("/hterm.html").toExternalForm());
         });
 
         VBox box = new VBox(webView);
@@ -155,7 +151,7 @@ public class TerminalTab extends Tab {
         }
     }
 
-    private void newTerminal(ActionEvent... actionEvent) {
+    public void newTerminal(ActionEvent... actionEvent) {
         TerminalTab terminalTab = new TerminalTab(getTerminalConfig(), getTabNameGenerator(), getTerminalPath());
         getTabPane().getTabs().add(terminalTab);
         getTabPane().getSelectionModel().select(terminalTab);
@@ -249,6 +245,11 @@ public class TerminalTab extends Tab {
 
 
     private void initializeProcess() throws Exception {
+
+        String userHome = System.getProperty("user.home");
+        Path dataDir = Paths.get(userHome).resolve(".terminalfx");
+        IOHelper.copyLibPty(dataDir);
+
         if (Platform.isWindows()) {
             this.termCommand = terminalConfig.getWindowsTerminalStarter().split("\\s+");
         } else {
@@ -257,12 +258,6 @@ public class TerminalTab extends Tab {
 
         Map<String, String> envs = new HashMap<>(System.getenv());
         envs.put("TERM", "xterm");
-
-        String userHome = System.getProperty("user.home");
-
-        Path dataDir = Paths.get(userHome).resolve(".terminalfx");
-
-        IOHelper.copyLibPty(dataDir);
 
         System.setProperty("PTY_LIB_FOLDER", dataDir.resolve("libpty").toString());
 

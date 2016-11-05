@@ -14,7 +14,7 @@ import javafx.scene.paint.Color;
 public class TerminalConfig {
 
     @JsonProperty(value = "send-encoding")
-    private String sendEncoding = "utf-8";
+    private String sendEncoding = "raw";
 
     @JsonProperty(value = "receive-encoding")
     private String receiveEncoding = "utf-8";

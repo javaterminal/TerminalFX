@@ -18,18 +18,15 @@
 </head>
 <body>
 <div id="terminal"></div>
-
-<script>
-    [hterm_js]
-</script>
+<script src="hterm.js"></script>
 <script>
     hterm.defaultStorage = new lib.Storage.Memory();
     hterm.copySelectionToClipboard = function (document) {
         app.copy(document.getSelection().toString());
     };
     var t = new hterm.Terminal("myterm");
-    //    t.getPrefs().set("send-encoding", "raw");
-    //    t.getPrefs().set("receive-encoding", "raw");
+    t.getPrefs().set("send-encoding", "raw");
+    t.getPrefs().set("receive-encoding", "utf-8");
     //    t.getPrefs().set("use-default-window-copy", true);
     //    t.getPrefs().set("clear-selection-after-copy", true);
     //    t.getPrefs().set("copy-on-select", false);
