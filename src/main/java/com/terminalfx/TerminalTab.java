@@ -2,27 +2,24 @@ package com.terminalfx;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pty4j.PtyProcess;
+import com.pty4j.WinSize;
+import com.sun.jna.Platform;
 import com.terminalfx.annotation.WebkitCall;
 import com.terminalfx.config.DefaultTabNameGenerator;
 import com.terminalfx.config.TabNameGenerator;
 import com.terminalfx.config.TerminalConfig;
-import com.pty4j.PtyProcess;
-import com.pty4j.WinSize;
-import com.sun.jna.Platform;
 import com.terminalfx.helper.IOHelper;
 import com.terminalfx.helper.ThreadHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
@@ -98,23 +95,15 @@ public class TerminalTab extends Tab {
             getWindow().setMember("app", this);
         });
 
-        ThreadHelper.runActionLater(() -> {
+        webEngine().load(TerminalTab.class.getResource("/hterm.html").toExternalForm());
 
-            this.setOnCloseRequest(event -> {
-                event.consume();
-                closeTerminal();
-            });
-
-            String tabName = getTabNameGenerator().next();
-            setText(tabName);
-
-            webEngine().load(TerminalTab.class.getResource("/hterm.html").toExternalForm());
+        this.setOnCloseRequest(event -> {
+            event.consume();
+            closeTerminal();
         });
 
-        VBox box = new VBox(webView);
-        box.setStyle(String.format("-fx-background-color: %s", getTerminalConfig().getBackgroundColor()));
-        box.setPadding(new Insets(3));
-        setContent(box);
+        String tabName = getTabNameGenerator().next();
+        setText(tabName);
 
         ContextMenu contextMenu = new ContextMenu();
         MenuItem newTab = new MenuItem("New Tab");
@@ -193,6 +182,13 @@ public class TerminalTab extends Tab {
                 process.setWinSize(new WinSize(columns, rows));
             }, true);
         }
+    }
+
+    @WebkitCall
+    public void onTerminalInit() {
+        ThreadHelper.runActionLater(() -> {
+            setContent(webView);
+        }, true);
     }
 
     @WebkitCall

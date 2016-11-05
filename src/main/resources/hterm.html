@@ -54,6 +54,8 @@
 
     t.onTerminalReady = function () {
 
+        app.onTerminalInit();
+
         var io = t.io.push();
 
         io.onVTKeystroke = function (str) {

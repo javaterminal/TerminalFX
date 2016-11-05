@@ -54,7 +54,7 @@ public class TerminalBuilder {
     }
 
     public TerminalTab newTerminal() {
-        TerminalTab terminalTab = new TerminalTab(terminalConfig, nameGenerator, terminalPath);
+        TerminalTab terminalTab = new TerminalTab(getTerminalConfig(), getNameGenerator(), getTerminalPath());
         return terminalTab;
     }
 }
