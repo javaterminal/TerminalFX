@@ -1,9 +1,6 @@
 package com.terminalfx;
 
 import javafx.application.Application;
-
-import static javafx.application.Application.launch;
-
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -22,7 +19,7 @@ public class AppStarter extends Application {
         Parent root = loader.load(sceneStream);
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add("/styles/Styles.css");
+        scene.getStylesheets().add(AppStarter.class.getResource("/styles/Styles.css").toExternalForm());
 
         stage.setTitle("TerminalFX");
         stage.setScene(scene);
