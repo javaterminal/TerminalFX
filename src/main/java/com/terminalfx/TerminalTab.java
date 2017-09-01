@@ -1,6 +1,5 @@
 package com.terminalfx;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pty4j.PtyProcess;
 import com.pty4j.WinSize;
@@ -150,7 +149,7 @@ public class TerminalTab extends Tab {
     public String getPrefs() {
         try {
             return new ObjectMapper().writeValueAsString(getTerminalConfig());
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -242,8 +241,7 @@ public class TerminalTab extends Tab {
 
     private void initializeProcess() throws Exception {
 
-        String userHome = System.getProperty("user.home");
-        Path dataDir = Paths.get(userHome).resolve(".terminalfx");
+        Path dataDir = getDataDir();
         IOHelper.copyLibPty(dataDir);
 
         if (Platform.isWindows()) {
@@ -279,6 +277,12 @@ public class TerminalTab extends Tab {
         focusCursor();
 
         process.waitFor();
+    }
+
+    private Path getDataDir() {
+        String userHome = System.getProperty("user.home");
+        Path dataDir = Paths.get(userHome).resolve(".terminalfx");
+        return dataDir;
     }
 
     private String detectTerminalCharacter() {
