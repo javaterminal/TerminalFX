@@ -1,4 +1,4 @@
-package com.terminalfx;
+package com.kodedu.terminalfx;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -10,16 +10,16 @@ import javafx.stage.Stage;
 import java.io.InputStream;
 
 
-public class AppStarter extends Application {
+public class TerminalAppStarter extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        InputStream sceneStream = getClass().getResourceAsStream("/fxml/Scene.fxml");
+        InputStream sceneStream = TerminalAppStarter.class.getResourceAsStream("/fxml/Terminal_Scene.fxml");
         FXMLLoader loader = new FXMLLoader();
         Parent root = loader.load(sceneStream);
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(AppStarter.class.getResource("/styles/Styles.css").toExternalForm());
+        scene.getStylesheets().add(TerminalAppStarter.class.getResource("/styles/Styles.css").toExternalForm());
 
         stage.setTitle("TerminalFX");
         stage.setScene(scene);

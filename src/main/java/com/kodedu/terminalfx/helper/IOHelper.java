@@ -1,12 +1,8 @@
-package com.terminalfx.helper;
+package com.kodedu.terminalfx.helper;
 
 import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by usta on 12.09.2016.

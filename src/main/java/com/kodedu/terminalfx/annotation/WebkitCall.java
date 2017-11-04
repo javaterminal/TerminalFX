@@ -1,4 +1,4 @@
-package com.terminalfx.annotation;
+package com.kodedu.terminalfx.annotation;
 
 /**
  * Created by usta on 12.09.2016.

@@ -1,4 +1,4 @@
-package com.terminalfx.config;
+package com.kodedu.terminalfx.config;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

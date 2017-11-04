@@ -1,15 +1,15 @@
-package com.terminalfx;
+package com.kodedu.terminalfx;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kodedu.terminalfx.annotation.WebkitCall;
+import com.kodedu.terminalfx.config.DefaultTabNameGenerator;
+import com.kodedu.terminalfx.config.TabNameGenerator;
+import com.kodedu.terminalfx.config.TerminalConfig;
+import com.kodedu.terminalfx.helper.IOHelper;
+import com.kodedu.terminalfx.helper.ThreadHelper;
 import com.pty4j.PtyProcess;
 import com.pty4j.WinSize;
 import com.sun.jna.Platform;
-import com.terminalfx.annotation.WebkitCall;
-import com.terminalfx.config.DefaultTabNameGenerator;
-import com.terminalfx.config.TabNameGenerator;
-import com.terminalfx.config.TerminalConfig;
-import com.terminalfx.helper.IOHelper;
-import com.terminalfx.helper.ThreadHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;

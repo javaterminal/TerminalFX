@@ -1,4 +1,4 @@
-package com.terminalfx.helper;
+package com.kodedu.terminalfx.helper;
 
 import javafx.application.Platform;
 

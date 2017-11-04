@@ -1,8 +1,8 @@
-package com.terminalfx;
+package com.kodedu.terminalfx;
 
-import com.terminalfx.config.DefaultTabNameGenerator;
-import com.terminalfx.config.TerminalConfig;
-import com.terminalfx.config.TabNameGenerator;
+import com.kodedu.terminalfx.config.DefaultTabNameGenerator;
+import com.kodedu.terminalfx.config.TerminalConfig;
+import com.kodedu.terminalfx.config.TabNameGenerator;
 
 import java.nio.file.Path;
 import java.util.Objects;

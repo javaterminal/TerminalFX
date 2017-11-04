@@ -1,10 +1,10 @@
-package com.terminalfx.config;
+package com.kodedu.terminalfx.config;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.terminalfx.helper.FxHelper;
+import com.kodedu.terminalfx.helper.FxHelper;
 import javafx.scene.paint.Color;
 
 /**

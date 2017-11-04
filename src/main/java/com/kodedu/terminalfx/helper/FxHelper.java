@@ -1,4 +1,4 @@
-package com.terminalfx.helper;
+package com.kodedu.terminalfx.helper;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;

@@ -1,12 +1,11 @@
-package com.terminalfx;
+package com.kodedu.terminalfx;
 
-import com.terminalfx.config.TerminalConfig;
+import com.kodedu.terminalfx.config.TerminalConfig;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.ResourceBundle;
 
 public class FXMLController implements Initializable {
