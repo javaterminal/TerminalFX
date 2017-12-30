@@ -62,13 +62,8 @@
             </releases>
         </repository>
         <repository>
-            <id>asciidocfx-releases</id>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-                <updatePolicy>always</updatePolicy>
-            </releases>
-            <url>https://github.com/asciidocfx</url>
+            <id>pty4j-releases</id>
+            <url>https://github.com/javaterminal/kodedu/pty4j/raw/master/releases</url>
         </repository>
         <repository>
             <id>javacomm-repo</id>
