@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
@@ -48,11 +49,12 @@ public class TerminalTab extends Tab {
     private BufferedReader errorReader;
     private BufferedWriter outputWriter;
     private Path terminalPath;
-    private boolean isReady = false;
     private String[] termCommand;
     private LinkedBlockingQueue<String> commandQueue;
     private TerminalConfig terminalConfig = new TerminalConfig();
     private TabNameGenerator tabNameGenerator;
+    private boolean isTerminalReady = false;
+    private CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public TerminalTab(TerminalConfig terminalConfig, TabNameGenerator tabNameGenerator, Path terminalPath) {
         this.terminalConfig = terminalConfig;
@@ -194,11 +196,26 @@ public class TerminalTab extends Tab {
     public void onTerminalReady() {
 
         ThreadHelper.start(() -> {
-            isReady = true;
             try {
                 initializeProcess();
             } catch (Exception e) {
                 // e.printStackTrace();
+            }
+
+        });
+    }
+
+    public void onTerminalReady(Runnable onReadyAction) {
+
+        ThreadHelper.start(() -> {
+
+            try {
+                countDownLatch.await();
+            } catch (Exception e) {
+            }
+
+            if (Objects.nonNull(onReadyAction)) {
+                ThreadHelper.start(onReadyAction);
             }
         });
     }
@@ -217,6 +234,10 @@ public class TerminalTab extends Tab {
     }
 
     public void print(String text) {
+        long count = countDownLatch.getCount();
+        if (count == 1) {
+            throw new RuntimeException("Terminal is not ready yet.");
+        }
         ThreadHelper.runActionLater(() -> {
             getTerminalIO().call("print", text);
         });
@@ -275,6 +296,9 @@ public class TerminalTab extends Tab {
         });
 
         focusCursor();
+
+        countDownLatch.countDown();
+        isTerminalReady = true;
 
         process.waitFor();
     }
@@ -396,10 +420,6 @@ public class TerminalTab extends Tab {
         return terminalPath;
     }
 
-    public boolean isReady() {
-        return isReady;
-    }
-
 
     public TerminalConfig getTerminalConfig() {
         if (Objects.isNull(terminalConfig)) {
@@ -421,5 +441,9 @@ public class TerminalTab extends Tab {
 
     public void setTabNameGenerator(TabNameGenerator tabNameGenerator) {
         this.tabNameGenerator = tabNameGenerator;
+    }
+
+    public boolean isTerminalReady() {
+        return isTerminalReady;
     }
 }
