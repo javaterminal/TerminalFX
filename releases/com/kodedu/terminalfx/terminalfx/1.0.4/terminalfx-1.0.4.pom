@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.asciidocfx.asciidocfx</groupId>
+    <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
     <version>1.0.4</version>
     <packaging>jar</packaging>
@@ -21,7 +21,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.asciidocfx.pty4j</groupId>
+            <groupId>com.kodedu.pty4j</groupId>
             <artifactId>pty4j</artifactId>
             <version>0.7.4</version>
         </dependency>
@@ -63,7 +63,7 @@
         </repository>
         <repository>
             <id>pty4j-releases</id>
-            <url>https://github.com/javaterminal/kodedu/pty4j/raw/master/releases</url>
+            <url>https://github.com/javaterminal/pty4j/raw/master/releases</url>
         </repository>
         <repository>
             <id>javacomm-repo</id>
