@@ -11,7 +11,7 @@ Rahman Usta
 
 TerminalFX is a terminal (PTY) emulator application written in JavaFX 8.
 
-We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running process and https://chromium.googlesource.com/apps/libapps/+/master/hterm/[hterm.js] from Chromium project to interact with Pty4J. TerminalFX is using powerful JavaFX WebView component to run hterm.js.
+We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running process and https://xtermjs.org/[xterm.js] to interact with Pty4J. TerminalFX is using powerful JavaFX WebView component to run xterm.js.
 
 == Features
 

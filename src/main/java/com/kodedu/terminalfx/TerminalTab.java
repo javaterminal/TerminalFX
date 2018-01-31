@@ -89,14 +89,17 @@ public class TerminalTab extends Tab {
 
     public void initialize() {
 
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+
         commandQueue = new LinkedBlockingQueue<>();
         webView = new WebView();
+        setContent(webView);
 
         webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
             getWindow().setMember("app", this);
         });
 
-        webEngine().load(TerminalTab.class.getResource("/hterm.html").toExternalForm());
+        webEngine().load(TerminalTab.class.getResource("/terminalfx.html").toExternalForm());
 
         this.setOnCloseRequest(event -> {
             event.consume();
@@ -147,7 +150,7 @@ public class TerminalTab extends Tab {
         getTabPane().getSelectionModel().select(terminalTab);
     }
 
-    @WebkitCall(from = "hterm")
+    @WebkitCall(from = "xterm.js")
     public String getPrefs() {
         try {
             return new ObjectMapper().writeValueAsString(getTerminalConfig());
@@ -174,7 +177,7 @@ public class TerminalTab extends Tab {
         }, true);
     }
 
-    @WebkitCall(from = "hterm")
+    @WebkitCall(from = "xterm.js")
     public void resizeTerminal(int columns, int rows) {
         this.columns = columns;
         this.rows = rows;
@@ -186,15 +189,7 @@ public class TerminalTab extends Tab {
     }
 
     @WebkitCall
-    public void onTerminalInit() {
-        ThreadHelper.runActionLater(() -> {
-            setContent(webView);
-        }, true);
-    }
-
-    @WebkitCall
     public void onTerminalReady() {
-
         ThreadHelper.start(() -> {
             try {
                 initializeProcess();
@@ -205,7 +200,7 @@ public class TerminalTab extends Tab {
         });
     }
 
-    public void onTerminalReady(Runnable onReadyAction) {
+    public void onTerminalFxReady(Runnable onReadyAction) {
 
         ThreadHelper.start(() -> {
 
@@ -221,8 +216,12 @@ public class TerminalTab extends Tab {
     }
 
     @WebkitCall
-    public void command(String command) throws InterruptedException {
-        commandQueue.put(command);
+    public void command(String command) {
+        try {
+            commandQueue.put(command);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         ThreadHelper.start(() -> {
             try {
                 outputWriter.write(commandQueue.poll());
@@ -239,7 +238,7 @@ public class TerminalTab extends Tab {
             throw new RuntimeException("Terminal is not ready yet.");
         }
         ThreadHelper.runActionLater(() -> {
-            getTerminalIO().call("print", text);
+            getTerminal().call("write", text);
         });
 
     }
@@ -252,13 +251,8 @@ public class TerminalTab extends Tab {
     }
 
     private JSObject getTerminal() {
-        return (JSObject) webEngine().executeScript("t");
+        return (JSObject) webEngine().executeScript("term");
     }
-
-    private JSObject getTerminalIO() {
-        return (JSObject) webEngine().executeScript("t.io");
-    }
-
 
     private void initializeProcess() throws Exception {
 
@@ -347,7 +341,7 @@ public class TerminalTab extends Tab {
         });
     }
 
-    @WebkitCall(from = "hterm")
+    @WebkitCall(from = "xterm.js")
     public void copy(String text) {
         final Clipboard clipboard = Clipboard.getSystemClipboard();
         ClipboardContent clipboardContent = new ClipboardContent();
