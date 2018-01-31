@@ -2,7 +2,7 @@ package com.kodedu.terminalfx;
 
 import com.kodedu.terminalfx.config.TerminalConfig;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.TabPane;
 import javafx.scene.paint.Color;
 
 import java.net.URL;
@@ -33,6 +33,10 @@ public class FXMLController implements Initializable {
 
         TerminalBuilder terminalBuilder = new TerminalBuilder(defaultConfig);
         TerminalTab terminal = terminalBuilder.newTerminal();
+        terminal.onTerminalFxReady(() -> {
+            terminal.command("java -version\r");
+        });
+
         tabPane.getTabs().add(terminal);
 
     }

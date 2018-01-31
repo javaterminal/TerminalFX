@@ -5,7 +5,7 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 1.4
+:terminalfx-version: 1.5
 
 == JavaFX Terminal Emulator
 
@@ -86,7 +86,7 @@ image::images\cygwin.png[]
 <dependency>
     <groupId>com.asciidocfx</groupId>
     <artifactId>terminalfx</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
 </dependency>
 ----
 
@@ -98,6 +98,17 @@ git clone https://github.com/rahmanusta/TerminalFX
 cd TerminalFX
 mvn clean install
 mvn exec:java -Dexec.mainClass="com.kodedu.terminalfx.TerminalAppStarter"
+----
+
+== Run command
+
+You can run commands:
+
+[source,bash]
+----
+terminal.onTerminalFxReady(() -> {
+    terminal.command("java -version\r");
+});
 ----
 
 == Licence

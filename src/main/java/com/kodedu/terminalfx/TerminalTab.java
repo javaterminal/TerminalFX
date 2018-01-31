@@ -193,6 +193,9 @@ public class TerminalTab extends Tab {
     }
 
     @WebkitCall
+    /**
+     * Internal use only
+     */
     public void onTerminalReady() {
 
         ThreadHelper.start(() -> {
@@ -205,7 +208,7 @@ public class TerminalTab extends Tab {
         });
     }
 
-    public void onTerminalReady(Runnable onReadyAction) {
+    public void onTerminalFxReady(Runnable onReadyAction) {
 
         ThreadHelper.start(() -> {
 
@@ -221,8 +224,12 @@ public class TerminalTab extends Tab {
     }
 
     @WebkitCall
-    public void command(String command) throws InterruptedException {
-        commandQueue.put(command);
+    public void command(String command) {
+        try {
+            commandQueue.put(command);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         ThreadHelper.start(() -> {
             try {
                 outputWriter.write(commandQueue.poll());
@@ -233,7 +240,7 @@ public class TerminalTab extends Tab {
         });
     }
 
-    public void print(String text) {
+    private void print(String text) {
         long count = countDownLatch.getCount();
         if (count == 1) {
             throw new RuntimeException("Terminal is not ready yet.");
