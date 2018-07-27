@@ -212,10 +212,7 @@ public class TerminalTab extends Tab {
 
         ThreadHelper.start(() -> {
 
-            try {
-                countDownLatch.await();
-            } catch (Exception e) {
-            }
+            ThreadHelper.awaitLatch(countDownLatch);
 
             if (Objects.nonNull(onReadyAction)) {
                 ThreadHelper.start(onReadyAction);
@@ -241,10 +238,7 @@ public class TerminalTab extends Tab {
     }
 
     private void print(String text) {
-        long count = countDownLatch.getCount();
-        if (count == 1) {
-            throw new RuntimeException("Terminal is not ready yet.");
-        }
+        ThreadHelper.awaitLatch(countDownLatch);
         ThreadHelper.runActionLater(() -> {
             getTerminalIO().call("print", text);
         });
