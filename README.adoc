@@ -5,7 +5,7 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 1.5
+:terminalfx-version: 1.0.6
 
 == JavaFX Terminal Emulator
 
@@ -86,7 +86,7 @@ image::images\cygwin.png[]
 <dependency>
     <groupId>com.asciidocfx</groupId>
     <artifactId>terminalfx</artifactId>
-    <version>1.0.5</version>
+    <version>{terminalfx-version}</version>
 </dependency>
 ----
 
