@@ -84,7 +84,7 @@ image::images\cygwin.png[]
 
 <!-- Add dependency -->
 <dependency>
-    <groupId>com.asciidocfx</groupId>
+    <groupId>com.kodedu.asciidocfx</groupId>
     <artifactId>terminalfx</artifactId>
     <version>1.0.6</version>
 </dependency>
