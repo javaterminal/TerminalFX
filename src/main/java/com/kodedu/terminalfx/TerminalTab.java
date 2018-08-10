@@ -19,6 +19,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
@@ -91,6 +92,12 @@ public class TerminalTab extends Tab {
 
         commandQueue = new LinkedBlockingQueue<>();
         webView = new WebView();
+
+        webView.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.isShortcutDown() && "T".equalsIgnoreCase(event.getText())) {
+                newTerminal();
+            }
+        });
 
         webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
             getWindow().setMember("app", this);
@@ -178,11 +185,9 @@ public class TerminalTab extends Tab {
     public void resizeTerminal(int columns, int rows) {
         this.columns = columns;
         this.rows = rows;
-        if (Objects.nonNull(process)) {
-            ThreadHelper.runActionLater(() -> {
-                process.setWinSize(new WinSize(columns, rows));
-            }, true);
-        }
+        ThreadHelper.start(() -> {
+            setWinSize(process, columns, rows);
+        });
     }
 
     @WebkitCall
@@ -202,7 +207,7 @@ public class TerminalTab extends Tab {
             try {
                 initializeProcess();
             } catch (Exception e) {
-                // e.printStackTrace();
+                e.printStackTrace();
             }
 
         });
@@ -283,7 +288,8 @@ public class TerminalTab extends Tab {
             this.process = PtyProcess.exec(termCommand, envs);
         }
 
-        process.setWinSize(new WinSize(columns, rows));
+        setWinSize(process, columns, rows);
+
         this.inputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         this.outputWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
@@ -302,6 +308,14 @@ public class TerminalTab extends Tab {
         isTerminalReady = true;
 
         process.waitFor();
+    }
+
+    private void setWinSize(PtyProcess process, int columns, int rows) {
+        try {
+            process.setWinSize(new WinSize(columns, rows));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private Path getDataDir() {

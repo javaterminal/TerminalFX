@@ -20,60 +20,70 @@
 <div id="terminal"></div>
 <script src="hterm.js"></script>
 <script>
-    hterm.defaultStorage = new lib.Storage.Memory();
-    hterm.copySelectionToClipboard = function (document) {
-        app.copy(document.getSelection().toString());
-    };
-    var t = new hterm.Terminal("myterm");
-    t.getPrefs().set("send-encoding", "raw");
-    t.getPrefs().set("receive-encoding", "utf-8");
-    //    t.getPrefs().set("use-default-window-copy", true);
-    //    t.getPrefs().set("clear-selection-after-copy", true);
-    //    t.getPrefs().set("copy-on-select", false);
-    //    t.getPrefs().set("ctrl-c-copy", true);
-    //    t.getPrefs().set("ctrl-v-paste", true);
-    //    t.getPrefs().set("cursor-color", "black");
-    //    t.getPrefs().set("background-color", "white");
-    //    t.getPrefs().set("font-size", 12);
-    //    t.getPrefs().set("foreground-color", "black");
-    //    t.getPrefs().set("cursor-blink", false);
-    //    t.getPrefs().set("scrollbar-visible", true);
-    //    t.getPrefs().set("scroll-wheel-move-multiplier", 0.1);
-    //    t.getPrefs().set("user-css", "/afx/resource/?p=css/hterm.css");
-    //    t.getPrefs().set("enable-clipboard-notice",true);
 
     function updatePrefs(prefs) {
         var prefsObject = JSON.parse(prefs);
         for (var key in prefsObject) {
             var value = prefsObject[key];
-            t.getPrefs().set(key, value);
+            if (window.t) {
+                t.getPrefs().set(key, value);
+            }
         }
     }
 
-    updatePrefs(app.getPrefs());
+    function startTerminal() {
+        hterm.defaultStorage = new lib.Storage.Memory();
+        hterm.copySelectionToClipboard = function (document) {
+            app.copy(document.getSelection().toString());
+        };
+        window.t = new hterm.Terminal("myterm");
+        t.getPrefs().set("send-encoding", "raw");
+        t.getPrefs().set("receive-encoding", "utf-8");
+        //    t.getPrefs().set("use-default-window-copy", true);
+        //    t.getPrefs().set("clear-selection-after-copy", true);
+        //    t.getPrefs().set("copy-on-select", false);
+        //    t.getPrefs().set("ctrl-c-copy", true);
+        //    t.getPrefs().set("ctrl-v-paste", true);
+        //    t.getPrefs().set("cursor-color", "black");
+        //    t.getPrefs().set("background-color", "white");
+        //    t.getPrefs().set("font-size", 12);
+        //    t.getPrefs().set("foreground-color", "black");
+        //    t.getPrefs().set("cursor-blink", false);
+        //    t.getPrefs().set("scrollbar-visible", true);
+        //    t.getPrefs().set("scroll-wheel-move-multiplier", 0.1);
+        //    t.getPrefs().set("user-css", "/afx/resource/?p=css/hterm.css");
+        //    t.getPrefs().set("enable-clipboard-notice",true);
 
-    t.onTerminalReady = function () {
+        updatePrefs(app.getPrefs());
 
-        app.onTerminalInit();
+        t.onTerminalReady = function () {
 
-        var io = t.io.push();
+            app.onTerminalInit();
 
-        io.onVTKeystroke = function (str) {
-            app.command(str);
+            var io = t.io.push();
+
+            io.onVTKeystroke = function (str) {
+                app.command(str);
+            };
+
+            io.sendString = io.onVTKeystroke;
+
+            io.onTerminalResize = function (columns, rows) {
+                app.resizeTerminal(columns, rows);
+            };
+
+            t.installKeyboard();
+            app.onTerminalReady();
+
         };
 
-        io.sendString = io.onVTKeystroke;
+        t.decorate(document.querySelector('#terminal'));
+    }
 
-        io.onTerminalResize = function (columns, rows) {
-            app.resizeTerminal(columns, rows);
-        };
+    document.addEventListener("DOMContentLoaded", function (event) {
+        startTerminal();
+    });
 
-        t.installKeyboard();
-        app.onTerminalReady();
-
-    };
-
-    t.decorate(document.querySelector('#terminal'));
 </script>
 </body>
 </html>
