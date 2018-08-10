@@ -5,7 +5,7 @@
 
     <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <packaging>jar</packaging>
 
     <name>TerminalFX</name>

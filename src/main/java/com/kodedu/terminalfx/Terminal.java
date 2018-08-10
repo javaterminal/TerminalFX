@@ -27,113 +27,117 @@ import javafx.beans.property.SimpleObjectProperty;
 
 public class Terminal extends TerminalView {
 
-	private PtyProcess process;
-	private final ObjectProperty<Writer> outputWriterProperty;
-	private final Path terminalPath;
-	private String[] termCommand;
-	private final LinkedBlockingQueue<String> commandQueue;
+    private PtyProcess process;
+    private final ObjectProperty<Writer> outputWriterProperty;
+    private final Path terminalPath;
+    private String[] termCommand;
+    private final LinkedBlockingQueue<String> commandQueue;
 
-	public Terminal() {
-		this(null, null);
-	}
+    public Terminal() {
+        this(null, null);
+    }
 
-	public Terminal(TerminalConfig terminalConfig, Path terminalPath) {
-		setTerminalConfig(terminalConfig);
-		this.terminalPath = terminalPath;
-		outputWriterProperty = new SimpleObjectProperty<>();
-		commandQueue = new LinkedBlockingQueue<>();
-	}
+    public Terminal(TerminalConfig terminalConfig, Path terminalPath) {
+        setTerminalConfig(terminalConfig);
+        this.terminalPath = terminalPath;
+        outputWriterProperty = new SimpleObjectProperty<>();
+        commandQueue = new LinkedBlockingQueue<>();
+    }
 
-	@WebkitCall
-	public void command(String command) {
-		try {
-			commandQueue.put(command);
-		} catch(final InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-		ThreadHelper.start(() -> {
-			try {
-				final String commandToExecute = commandQueue.poll();
-				getOutputWriter().write(commandToExecute);
-				getOutputWriter().flush();
-			} catch(final IOException e) {
-				e.printStackTrace();
-			}
-		});
-	}
+    @WebkitCall
+    public void command(String command) {
+        try {
+            commandQueue.put(command);
+        } catch (final InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        ThreadHelper.start(() -> {
+            try {
+                final String commandToExecute = commandQueue.poll();
+                getOutputWriter().write(commandToExecute);
+                getOutputWriter().flush();
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
-	@Override
-	public void onTerminalReady() {
-		ThreadHelper.start(() -> {
-			try {
-				initializeProcess();
-			} catch(final Exception e) {
-			}
-		});
-	}
+    @Override
+    public void onTerminalReady() {
+        ThreadHelper.start(() -> {
+            try {
+                initializeProcess();
+            } catch (final Exception e) {
+            }
+        });
+    }
 
-	private void initializeProcess() throws Exception {
-		final Path dataDir = getDataDir();
-		IOHelper.copyLibPty(dataDir);
+    private void initializeProcess() throws Exception {
+        final Path dataDir = getDataDir();
+        IOHelper.copyLibPty(dataDir);
 
-		if(Platform.isWindows()) {
-			this.termCommand = getTerminalConfig().getWindowsTerminalStarter().split("\\s+");
-		} else {
-			this.termCommand = getTerminalConfig().getUnixTerminalStarter().split("\\s+");
-		}
+        if (Platform.isWindows()) {
+            this.termCommand = getTerminalConfig().getWindowsTerminalStarter().split("\\s+");
+        } else {
+            this.termCommand = getTerminalConfig().getUnixTerminalStarter().split("\\s+");
+        }
 
-		final Map<String, String> envs = new HashMap<>(System.getenv());
-		envs.put("TERM", "xterm");
+        final Map<String, String> envs = new HashMap<>(System.getenv());
+        envs.put("TERM", "xterm");
 
-		System.setProperty("PTY_LIB_FOLDER", dataDir.resolve("libpty").toString());
+        System.setProperty("PTY_LIB_FOLDER", dataDir.resolve("libpty").toString());
 
-		if(Objects.nonNull(terminalPath) && Files.exists(terminalPath)) {
-			this.process = PtyProcess.exec(termCommand, envs, terminalPath.toString());
-		} else {
-			this.process = PtyProcess.exec(termCommand, envs);
-		}
+        if (Objects.nonNull(terminalPath) && Files.exists(terminalPath)) {
+            this.process = PtyProcess.exec(termCommand, envs, terminalPath.toString());
+        } else {
+            this.process = PtyProcess.exec(termCommand, envs);
+        }
 
-		columnsProperty().addListener(evt -> updateWinSize());
-		rowsProperty().addListener(evt -> updateWinSize());
-		updateWinSize();
-		setInputReader(new BufferedReader(new InputStreamReader(process.getInputStream())));
-		setErrorReader(new BufferedReader(new InputStreamReader(process.getErrorStream())));
-		setOutputWriter(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())));
-		focusCursor();
+        columnsProperty().addListener(evt -> updateWinSize());
+        rowsProperty().addListener(evt -> updateWinSize());
+        updateWinSize();
+        setInputReader(new BufferedReader(new InputStreamReader(process.getInputStream())));
+        setErrorReader(new BufferedReader(new InputStreamReader(process.getErrorStream())));
+        setOutputWriter(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())));
+        focusCursor();
 
-		countDownLatch.countDown();
+        countDownLatch.countDown();
 
-		process.waitFor();
-	}
+        process.waitFor();
+    }
 
-	private Path getDataDir() {
-		final String userHome = System.getProperty("user.home");
-		final Path dataDir = Paths.get(userHome).resolve(".terminalfx");
-		return dataDir;
-	}
+    private Path getDataDir() {
+        final String userHome = System.getProperty("user.home");
+        final Path dataDir = Paths.get(userHome).resolve(".terminalfx");
+        return dataDir;
+    }
 
-	public Path getTerminalPath() {
-		return terminalPath;
-	}
+    public Path getTerminalPath() {
+        return terminalPath;
+    }
 
-	private void updateWinSize() {
-		process.setWinSize(new WinSize(getColumns(), getRows()));
-	}
+    private void updateWinSize() {
+        try {
+            process.setWinSize(new WinSize(getColumns(), getRows()));
+        } catch (Exception e) {
+            //
+        }
+    }
 
-	public ObjectProperty<Writer> outputWriterProperty() {
-		return outputWriterProperty;
-	}
+    public ObjectProperty<Writer> outputWriterProperty() {
+        return outputWriterProperty;
+    }
 
-	public Writer getOutputWriter() {
-		return outputWriterProperty.get();
-	}
+    public Writer getOutputWriter() {
+        return outputWriterProperty.get();
+    }
 
-	public void setOutputWriter(Writer writer) {
-		outputWriterProperty.set(writer);
-	}
+    public void setOutputWriter(Writer writer) {
+        outputWriterProperty.set(writer);
+    }
 
-	public PtyProcess getProcess() {
-		return process;
-	}
+    public PtyProcess getProcess() {
+        return process;
+    }
 
 }
