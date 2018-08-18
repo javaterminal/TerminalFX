@@ -18,7 +18,7 @@
 </head>
 <body>
 <div id="terminal"></div>
-<script src="hterm.js"></script>
+<script src="hterm_all.js"></script>
 <script>
 
     function updatePrefs(prefs) {
@@ -35,6 +35,9 @@
         hterm.defaultStorage = new lib.Storage.Memory();
         hterm.copySelectionToClipboard = function (document) {
             app.copy(document.getSelection().toString());
+        };
+        hterm.msg = function (name, args = [], string) {
+            return string;
         };
         window.t = new hterm.Terminal("myterm");
         t.getPrefs().set("send-encoding", "raw");

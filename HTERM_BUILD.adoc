@@ -1,0 +1,5 @@
+1. git clone https://chromium.googlesource.com/apps/libapps
+
+2. ./hterm/bin/mkdist.sh
+
+3. ./hterm/dist/js/hterm-all.js
