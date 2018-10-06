@@ -113,4 +113,4 @@ terminal.onTerminalFxReady(() -> {
 
 == Licence
 
-MIT
+This project is licensed under the MIT license. See link:LICENSE[LICENSE] for more information.
