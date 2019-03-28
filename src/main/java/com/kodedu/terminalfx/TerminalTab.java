@@ -2,14 +2,12 @@ package com.kodedu.terminalfx;
 
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.file.Path;
-import java.util.Objects;
 
 import com.kodedu.terminalfx.config.TabNameGenerator;
 import com.kodedu.terminalfx.config.TerminalConfig;
 import com.kodedu.terminalfx.helper.IOHelper;
 import com.kodedu.terminalfx.helper.ThreadHelper;
-import com.pty4j.PtyProcess;
+import com.kodedu.terminalfx.processes.Pty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,17 +17,23 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.KeyEvent;
 
-public class TerminalTab extends Tab {
+public class TerminalTab<T extends Pty> extends Tab {
 
-    private final Terminal terminal;
+    private final GenericTerminal<T> terminal;
     private final TabNameGenerator tabNameGenerator;
     private static final String NEW_TAB_KEY = "T";
+    private final TerminalGenerator<T> generator;
 
-    public TerminalTab(TerminalConfig terminalConfig, TabNameGenerator tabNameGenerator, Path terminalPath) {
-        this(new Terminal(terminalConfig, terminalPath), tabNameGenerator);
+    public TerminalTab(GenericTerminal<T> terminal, TabNameGenerator tabNameGenerator) {
+        this(terminal, null, tabNameGenerator);
     }
 
-    public TerminalTab(Terminal terminal, TabNameGenerator tabNameGenerator) {
+    public TerminalTab(TerminalGenerator<T> generator, TabNameGenerator tabNameGenerator) {
+        this(generator.generate(), generator, tabNameGenerator);
+    }
+
+    public TerminalTab(GenericTerminal<T> terminal, TerminalGenerator<T> generator, TabNameGenerator tabNameGenerator) {
+        this.generator = generator;
         this.terminal = terminal;
         this.tabNameGenerator = tabNameGenerator;
 
@@ -59,7 +63,9 @@ public class TerminalTab extends Tab {
         closeAll.setOnAction(this::closeAllTerminal);
         closeOthers.setOnAction(this::closeOtherTerminals);
 
-        contextMenu.getItems().addAll(newTab, closeTab, closeOthers, closeAll);
+        if (generator != null)
+            contextMenu.getItems().add(newTab);
+        contextMenu.getItems().addAll(closeTab, closeOthers, closeAll);
         this.setContextMenu(contextMenu);
 
         setContent(terminal);
@@ -70,7 +76,7 @@ public class TerminalTab extends Tab {
         for (final Tab tab : tabs) {
             if (tab instanceof TerminalTab) {
                 if (tab != this) {
-                    ((TerminalTab) tab).closeTerminal();
+                    ((TerminalTab<?>) tab).closeTerminal();
                 }
             }
         }
@@ -80,13 +86,16 @@ public class TerminalTab extends Tab {
         final ObservableList<Tab> tabs = FXCollections.observableArrayList(this.getTabPane().getTabs());
         for (final Tab tab : tabs) {
             if (tab instanceof TerminalTab) {
-                ((TerminalTab) tab).closeTerminal();
+                ((TerminalTab<?>) tab).closeTerminal();
             }
         }
     }
 
     public void newTerminal(ActionEvent... actionEvent) {
-        final TerminalTab terminalTab = new TerminalTab(getTerminalConfig(), getTabNameGenerator(), getTerminalPath());
+        if (generator == null)
+            return;
+
+        final TerminalTab<T> terminalTab = new TerminalTab<T>(generator, getTabNameGenerator());
         getTabPane().getTabs().add(terminalTab);
         getTabPane().getSelectionModel().select(terminalTab);
     }
@@ -105,10 +114,7 @@ public class TerminalTab extends Tab {
 
     public void destroy() {
         ThreadHelper.start(() -> {
-            while (Objects.isNull(getProcess())) {
-                ThreadHelper.sleep(250);
-            }
-            getProcess().destroy();
+            terminal.destroy();
             IOHelper.close(getInputReader(), getErrorReader(), getOutputWriter());
         });
     }
@@ -121,16 +127,12 @@ public class TerminalTab extends Tab {
         return tabNameGenerator;
     }
 
-    public Path getTerminalPath() {
-        return terminal.getTerminalPath();
-    }
-
     public TerminalConfig getTerminalConfig() {
         return terminal.getTerminalConfig();
     }
 
-    public PtyProcess getProcess() {
-        return terminal.getProcess();
+    public Pty getPty() {
+        return terminal.getPty();
     }
 
     public Reader getInputReader() {
@@ -145,7 +147,7 @@ public class TerminalTab extends Tab {
         return terminal.getOutputWriter();
     }
 
-    public Terminal getTerminal() {
+    public GenericTerminal<T> getTerminalView() {
         return terminal;
     }
 }
