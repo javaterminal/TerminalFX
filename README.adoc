@@ -9,7 +9,7 @@ Rahman Usta
 
 == JavaFX Terminal Emulator
 
-TerminalFX is a terminal (PTY) emulator application written in JavaFX 8.
+TerminalFX is a terminal (PTY) emulator application written in JavaFX 11.
 
 We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running process and https://chromium.googlesource.com/apps/libapps/+/master/hterm/[hterm.js] from Chromium project to interact with Pty4J. TerminalFX is using powerful JavaFX WebView component to run hterm.js.
 
@@ -98,7 +98,7 @@ image::images\cygwin.png[]
 <dependency>
     <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
 </dependency>
 ----
 
@@ -109,7 +109,7 @@ image::images\cygwin.png[]
 git clone https://github.com/rahmanusta/TerminalFX
 cd TerminalFX
 mvn clean install
-mvn exec:java -Dexec.mainClass="com.kodedu.terminalfx.TerminalAppStarter"
+mvn javafx:run
 ----
 
 == Run command
