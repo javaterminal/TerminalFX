@@ -5,7 +5,7 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 1.0.6
+:terminalfx-version: 1.1.0
 
 == JavaFX Terminal Emulator
 
@@ -21,6 +21,7 @@ We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running proces
 * CygWin Support
 * Configurable (Color, Size, Font)
 * Multi Tab Support
+* Support for non-process based terminals
 
 == Usage
 
@@ -28,7 +29,7 @@ We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running proces
 [source,java]
 ----
 TerminalBuilder terminalBuilder = new TerminalBuilder();
-TerminalTab terminal = terminalBuilder.newTerminal();
+TerminalTab<ExternalProcessPty> terminal = terminalBuilder.newTerminal();
 
 TabPane tabPane = new TabPane();
 tabPane.getTabs().add(terminal);    
@@ -45,13 +46,24 @@ darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
 darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
 
 TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
-TerminalTab terminal = terminalBuilder.newTerminal();
+TerminalTab<ExternalProcessPty> terminal = terminalBuilder.newTerminal();
 
 TabPane tabPane = new TabPane();
 tabPane.getTabs().add(terminal);
 ----
 
 image::images\dark.png[]
+
+.Using a non-Process Terminal
+[source,java]
+----
+FileCapturePty  filecap = new FileCapturePty(new File("log.in"), new File("README.adoc"), new File("LICENSE"));
+GenericTerminal<FileCapturePty> view = new GenericTerminal<FileCapturePty>(darkConfig, filecap);
+TerminalTab<FileCapturePty> terminal = new TerminalTab<>(view, new DefaultTabNameGenerator());
+
+TabPane tabPane = new TabPane();
+tabPane.getTabs().add(terminal);
+----
 
 == CygWin Support
 
@@ -61,7 +73,7 @@ TerminalConfig cygwinConfig = new TerminalConfig();
 cygwinConfig.setWindowsTerminalStarter("C:\\cygwin64\\bin\\bash -i"); <1>
 
 TerminalBuilder terminalBuilder = new TerminalBuilder(cygwinConfig);
-TerminalTab terminal = terminalBuilder.newTerminal();
+TerminalTab<ExternalProcessPty> terminal = terminalBuilder.newTerminal();
 
 TabPane tabPane = new TabPane();
 tabPane.getTabs().add(terminal);  
