@@ -100,6 +100,14 @@ mvn clean install
 mvn javafx:run
 ----
 
+== Run as Java Module
+
+The following modules have to be added in JVM parameters
+
+----
+--add-modules=javafx.controls,javafx.graphics
+----
+
 == Run command
 
 You can run commands:
