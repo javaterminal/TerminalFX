@@ -82,11 +82,18 @@ image::images\cygwin.png[]
     </repository>
 </repositories>
 
-<!-- Add dependency -->
+<!-- Add dependency for Java 11-->
 <dependency>
     <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
     <version>1.0.9</version>
+</dependency>
+
+<!-- Add dependency for Java 8-->
+<dependency>
+    <groupId>com.kodedu.terminalfx</groupId>
+    <artifactId>terminalfx</artifactId>
+    <version>1.0.8</version>
 </dependency>
 ----
 
