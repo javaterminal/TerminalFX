@@ -1,7 +1,5 @@
 package com.kodedu.terminalfx.config;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Created by usta on 26.09.2016.
  */

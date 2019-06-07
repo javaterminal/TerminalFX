@@ -22,7 +22,7 @@ public class FxHelper {
 
     public static boolean askQuestion(String message) {
         CompletableFuture<Boolean> completableFuture = new CompletableFuture<Boolean>();
-        completableFuture.runAsync(() -> {
+        CompletableFuture.runAsync(() -> {
             ThreadHelper.runActionLater(() -> {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.YES, ButtonType.NO);
                 ButtonType buttonType = alert.showAndWait().orElse(ButtonType.NO);
@@ -35,7 +35,7 @@ public class FxHelper {
 
     public static String askInput(String message) {
         CompletableFuture<String> completableFuture = new CompletableFuture<String>();
-        completableFuture.runAsync(() -> {
+        CompletableFuture.runAsync(() -> {
             ThreadHelper.runActionLater(() -> {
                 TextInputDialog inputDialog = new TextInputDialog();
                 inputDialog.setContentText(message);

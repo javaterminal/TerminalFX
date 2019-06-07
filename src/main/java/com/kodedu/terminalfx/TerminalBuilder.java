@@ -2,6 +2,7 @@ package com.kodedu.terminalfx;
 
 import com.kodedu.terminalfx.config.DefaultTabNameGenerator;
 import com.kodedu.terminalfx.config.TerminalConfig;
+import com.kodedu.terminalfx.processes.ExternalProcessPty;
 import com.kodedu.terminalfx.config.TabNameGenerator;
 
 import java.nio.file.Path;
@@ -53,8 +54,8 @@ public class TerminalBuilder {
         this.terminalPath = terminalPath;
     }
 
-    public TerminalTab newTerminal() {
-        TerminalTab terminalTab = new TerminalTab(getTerminalConfig(), getNameGenerator(), getTerminalPath());
+    public TerminalTab<ExternalProcessPty> newTerminal() {
+        TerminalTab<ExternalProcessPty> terminalTab = new TerminalTab<>(() -> new Terminal(getTerminalConfig(), getTerminalPath()), getNameGenerator());
         return terminalTab;
     }
 }
