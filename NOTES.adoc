@@ -1,0 +1,3 @@
+#Force cursorVisible
+
+this.cursorVisible=opt_copy?opt_copy.cursorVisible:true

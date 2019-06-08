@@ -2369,7 +2369,7 @@ lib.wc.unambiguous=[[0x1100,0x115f],[0x231a,0x231b],[0x2329,0x232a],[0x23e9,0x23
  * @constructor
  */hterm.Options=function(opt_copy){// All attributes in this class are public to allow easy access by the
 // terminal.
-  this.wraparound=opt_copy?opt_copy.wraparound:true;this.reverseWraparound=opt_copy?opt_copy.reverseWraparound:false;this.originMode=opt_copy?opt_copy.originMode:false;this.autoCarriageReturn=opt_copy?opt_copy.autoCarriageReturn:false;this.cursorVisible=opt_copy?opt_copy.cursorVisible:false;this.cursorBlink=opt_copy?opt_copy.cursorBlink:false;this.insertMode=opt_copy?opt_copy.insertMode:false;this.reverseVideo=opt_copy?opt_copy.reverseVideo:false;this.bracketedPaste=opt_copy?opt_copy.bracketedPaste:false;};// SOURCE FILE: hterm/js/hterm_parser.js
+  this.wraparound=opt_copy?opt_copy.wraparound:true;this.reverseWraparound=opt_copy?opt_copy.reverseWraparound:false;this.originMode=opt_copy?opt_copy.originMode:false;this.autoCarriageReturn=opt_copy?opt_copy.autoCarriageReturn:false;this.cursorVisible=opt_copy?opt_copy.cursorVisible:true;this.cursorBlink=opt_copy?opt_copy.cursorBlink:false;this.insertMode=opt_copy?opt_copy.insertMode:false;this.reverseVideo=opt_copy?opt_copy.reverseVideo:false;this.bracketedPaste=opt_copy?opt_copy.bracketedPaste:false;};// SOURCE FILE: hterm/js/hterm_parser.js
 // Copyright (c) 2015 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
