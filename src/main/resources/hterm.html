@@ -40,8 +40,8 @@
             return string;
         };
         window.t = new hterm.Terminal("myterm");
-        t.getPrefs().set("send-encoding", "raw");
-        t.getPrefs().set("receive-encoding", "utf-8");
+        // t.getPrefs().set("send-encoding", "raw");
+        // t.getPrefs().set("receive-encoding", "utf-8");
         //    t.getPrefs().set("use-default-window-copy", true);
         //    t.getPrefs().set("clear-selection-after-copy", true);
         //    t.getPrefs().set("copy-on-select", false);
@@ -84,7 +84,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function (event) {
-        startTerminal();
+        lib.init(startTerminal);
     });
 
 </script>

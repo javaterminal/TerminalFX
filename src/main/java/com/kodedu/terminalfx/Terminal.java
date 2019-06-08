@@ -1,11 +1,15 @@
 package com.kodedu.terminalfx;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import com.kodedu.terminalfx.annotation.WebkitCall;
+import com.kodedu.terminalfx.config.TerminalConfig;
+import com.kodedu.terminalfx.helper.ThreadHelper;
+import com.pty4j.PtyProcess;
+import com.pty4j.WinSize;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import org.apache.commons.lang3.SystemUtils;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,17 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import com.kodedu.terminalfx.annotation.WebkitCall;
-import com.kodedu.terminalfx.config.TerminalConfig;
-import com.kodedu.terminalfx.helper.IOHelper;
-import com.kodedu.terminalfx.helper.ThreadHelper;
-import com.pty4j.PtyProcess;
-import com.pty4j.WinSize;
-import com.sun.jna.Platform;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 
 public class Terminal extends TerminalView {
 
@@ -74,9 +67,7 @@ public class Terminal extends TerminalView {
 
     private void initializeProcess() throws Exception {
         final Path dataDir = getDataDir();
-        IOHelper.copyLibPty(dataDir);
-
-        if (Platform.isWindows()) {
+        if (SystemUtils.IS_OS_WINDOWS) {
             this.termCommand = getTerminalConfig().getWindowsTerminalStarter().split("\\s+");
         } else {
             this.termCommand = getTerminalConfig().getUnixTerminalStarter().split("\\s+");

@@ -1,16 +1,10 @@
 package com.kodedu.terminalfx;
 
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Path;
-import java.util.Objects;
-
 import com.kodedu.terminalfx.config.TabNameGenerator;
 import com.kodedu.terminalfx.config.TerminalConfig;
 import com.kodedu.terminalfx.helper.IOHelper;
 import com.kodedu.terminalfx.helper.ThreadHelper;
 import com.pty4j.PtyProcess;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -18,6 +12,11 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.KeyEvent;
+
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Path;
+import java.util.Objects;
 
 public class TerminalTab extends Tab {
 

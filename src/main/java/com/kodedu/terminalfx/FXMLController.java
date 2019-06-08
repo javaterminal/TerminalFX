@@ -34,7 +34,7 @@ public class FXMLController implements Initializable {
         TerminalBuilder terminalBuilder = new TerminalBuilder(defaultConfig);
         TerminalTab terminal = terminalBuilder.newTerminal();
 //        terminal.onTerminalFxReady(() -> {
-//            terminal.command("java -version\r");
+//            terminal.getTerminal().command("java -version\r");
 //        });
 
         tabPane.getTabs().add(terminal);

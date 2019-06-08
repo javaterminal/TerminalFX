@@ -1,25 +1,23 @@
 package com.kodedu.terminalfx;
 
-import java.io.Reader;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kodedu.terminalfx.annotation.WebkitCall;
 import com.kodedu.terminalfx.config.TerminalConfig;
 import com.kodedu.terminalfx.helper.ThreadHelper;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
+
+import java.io.Reader;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 public class TerminalView extends Pane {
 

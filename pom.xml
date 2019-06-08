@@ -5,7 +5,7 @@
 
     <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
-    <version>1.0.9</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>TerminalFX</name>
@@ -13,6 +13,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>com.kodedu.terminalfx.TerminalAppStarter</mainClass>
+        <pty4j.version>0.8.6</pty4j.version>
+        <commons-lang3.version>3.9</commons-lang3.version>
+        <jackson.version>2.9.8</jackson.version>
+        <javafx.version>12</javafx.version>
     </properties>
 
     <organization>
@@ -21,34 +25,39 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.kodedu.pty4j</groupId>
+            <groupId>org.jetbrains.pty4j</groupId>
             <artifactId>pty4j</artifactId>
-            <version>0.7.4</version>
+            <version>${pty4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.8</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.9.8</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>12</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
-            <version>12</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>12</version>
+            <version>${javafx.version}</version>
         </dependency>
     </dependencies>
 
@@ -59,7 +68,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <release>11</release>
+                    <release>${javafx.version}</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -102,6 +111,11 @@
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
+        </repository>
+        <repository>
+            <id>bintray-jetbrains-pty4j</id>
+            <name>bintray</name>
+            <url>https://jetbrains.bintray.com/pty4j</url>
         </repository>
         <repository>
             <id>pty4j-releases</id>
