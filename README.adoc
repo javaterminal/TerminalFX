@@ -82,7 +82,7 @@ image::images\cygwin.png[]
     </repository>
 </repositories>
 
-<!-- Add dependency for Java 11-->
+<!-- Add dependency for Java 12-->
 <dependency>
     <groupId>com.kodedu.terminalfx</groupId>
     <artifactId>terminalfx</artifactId>
@@ -107,7 +107,7 @@ mvn clean install
 mvn javafx:run
 ----
 
-== Run as Java Module
+== Run as Java Module (Java 12)
 
 The following modules have to be added in JVM parameters
 
