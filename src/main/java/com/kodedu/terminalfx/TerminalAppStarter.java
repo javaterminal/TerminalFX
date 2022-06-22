@@ -1,5 +1,6 @@
 package com.kodedu.terminalfx;
 
+import com.kodedu.terminalfx.helper.ThreadHelper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -28,6 +29,7 @@ public class TerminalAppStarter extends Application {
 
     @Override
     public void stop() throws Exception {
+        ThreadHelper.stopExecutorService();
         Platform.exit();
         System.exit(0);
     }

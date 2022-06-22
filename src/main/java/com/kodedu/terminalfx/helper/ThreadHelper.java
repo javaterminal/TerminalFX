@@ -71,4 +71,11 @@ public class ThreadHelper {
             e.printStackTrace();
         }
     }
+
+    public static void stopExecutorService() {
+        if (!singleExecutorService.isShutdown()) {
+            singleExecutorService.shutdown();
+        }
+    }
+
 }
