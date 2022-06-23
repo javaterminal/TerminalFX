@@ -14,8 +14,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
+import org.apache.commons.io.FileUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -28,8 +34,25 @@ public class TerminalView extends Pane {
 	private final ObjectProperty<Reader> errorReaderProperty;
 	private TerminalConfig terminalConfig = new TerminalConfig();
 	protected final CountDownLatch countDownLatch = new CountDownLatch(1);
+	private static Path tempDirectory;
+
+	static {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				try {
+					if (Objects.nonNull(tempDirectory) && Files.exists(tempDirectory)) {
+						FileUtils.deleteDirectory(tempDirectory.toFile());
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+	}
 
 	public TerminalView() {
+		initializeResources();
 		webView = new WebView();
 		columnsProperty = new ReadOnlyIntegerWrapper(150);
 		rowsProperty = new ReadOnlyIntegerWrapper(10);
@@ -54,7 +77,34 @@ public class TerminalView extends Pane {
 		webView.prefHeightProperty().bind(heightProperty());
 		webView.prefWidthProperty().bind(widthProperty());
 
-		webEngine().load(TerminalView.class.getResource("/hterm.html").toExternalForm());
+		Path htmlPath = tempDirectory.resolve("hterm.html");
+		webEngine().load(htmlPath.toUri().toString());
+	}
+
+	private void initializeResources() {
+		try {
+			if(Objects.isNull(tempDirectory) || Files.notExists(tempDirectory)){
+				this.tempDirectory = Files.createTempDirectory("TerminalFX_Temp");
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		Path htmlPath = tempDirectory.resolve("hterm.html");
+		if(Files.notExists(htmlPath)) {
+			try (InputStream html = TerminalView.class.getResourceAsStream("/hterm.html");) {
+				Files.copy(html, htmlPath, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		Path htermJsPath = tempDirectory.resolve("hterm_all.js");
+		if(Files.notExists(htermJsPath)) {
+			try (InputStream html = TerminalView.class.getResourceAsStream("/hterm_all.js");) {
+				Files.copy(html, htermJsPath, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	@WebkitCall(from = "hterm")
