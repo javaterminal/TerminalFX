@@ -13,9 +13,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>com.kodedu.terminalfx.TerminalAppStarter</mainClass>
-        <pty4j.version>0.8.6</pty4j.version>
+        <pty4j.version>0.12.7</pty4j.version>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.13.3</jackson.version>
         <java.version>17</java.version>
         <javafx.version>18.0.1</javafx.version>
     </properties>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.jetbrains.pty4j</groupId>
             <artifactId>pty4j</artifactId>
-            <version>0.12.7</version>
+            <version>${pty4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

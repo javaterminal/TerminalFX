@@ -5,11 +5,11 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 1.1.0
+:terminalfx-version: 1.2.0
 
 == JavaFX Terminal Emulator
 
-TerminalFX is a terminal (PTY) emulator application written in JavaFX 12.
+TerminalFX is a terminal (PTY) emulator application written in JavaFX 18.
 
 We use https://github.com/traff/pty4j[Pty4J] to get VT codes from running process and https://chromium.googlesource.com/apps/libapps/+/master/hterm/[hterm.js] from Chromium project to interact with Pty4J. TerminalFX is using powerful JavaFX WebView component to run hterm.js.
 
@@ -107,7 +107,7 @@ mvn clean install
 mvn javafx:run
 ----
 
-== Run as Java Module (Java 12)
+== Run as Java Module (Java 17)
 
 The following modules have to be added in JVM parameters
 
