@@ -87,9 +87,10 @@ public class Terminal extends TerminalView {
         columnsProperty().addListener(evt -> updateWinSize());
         rowsProperty().addListener(evt -> updateWinSize());
         updateWinSize();
-        setInputReader(new BufferedReader(new InputStreamReader(process.getInputStream())));
-        setErrorReader(new BufferedReader(new InputStreamReader(process.getErrorStream())));
-        setOutputWriter(new BufferedWriter(new OutputStreamWriter(process.getOutputStream())));
+        String defaultCharEncoding=System.getProperty("file.encoding");
+        setInputReader(new BufferedReader(new InputStreamReader(process.getInputStream(), defaultCharEncoding)));
+        setErrorReader(new BufferedReader(new InputStreamReader(process.getErrorStream(), defaultCharEncoding)));
+        setOutputWriter(new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), defaultCharEncoding)));
         focusCursor();
 
         countDownLatch.countDown();
