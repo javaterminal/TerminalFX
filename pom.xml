@@ -15,7 +15,7 @@
         <mainClass>com.kodedu.terminalfx.TerminalAppStarter</mainClass>
         <pty4j.version>0.12.7</pty4j.version>
         <commons-lang3.version>3.9</commons-lang3.version>
-        <jackson.version>2.13.3</jackson.version>
+        <jackson.version>2.13.4.2</jackson.version>
         <java.version>17</java.version>
         <javafx.version>18.0.1</javafx.version>
     </properties>
