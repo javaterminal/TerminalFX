@@ -1,4 +1,32 @@
+= Building and releasing
+
+[source]
 ----
-mvn clean install source:jar -f pom.xml
-mvn deploy -f pom.xml
+mvn clean install
 ----
+
+Runs the tests headless (Monocle), which is what CI and a workstation both do. A real display
+is the embedder's acceptance run, not this library's.
+
+== Releasing
+
+The artifacts are not on Maven Central. Consumers resolve them from this repository's own
+`releases/` directory over `https://github.com/javaterminal/TerminalFX/raw/master/releases`, so a
+release is a deploy into that directory followed by a push:
+
+[source]
+----
+mvn clean deploy
+git add releases && git commit -m "release <version>" && git push
+----
+
+Never write over a version that is already in `releases/`: somebody's build resolves it.
+
+== The renderer
+
+`core/src/main/resources/com/kodedu/terminalfx/` carries xterm.js, its stylesheet and three
+addons, vendored rather than fetched. To move to a newer xterm.js, replace those files with the
+contents of the npm tarballs (`@xterm/xterm`, `@xterm/addon-fit`, `@xterm/addon-search`,
+`@xterm/addon-unicode11`) and run the tests: `TerminalViewTest` is what says whether the new one
+still draws Turkish, CJK, emoji and box drawing, still bounds its scrollback and still refuses a
+clipboard write from the far end.

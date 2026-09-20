@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:;">
+<title>terminal</title>
+<style>/*XTERM_CSS*/</style>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+  #screen { position: absolute; inset: 0; }
+  /*USER_CSS*/
+</style>
+</head>
+<body>
+<div id="screen"></div>
+<script>/*XTERM_JS*/</script>
+<script>/*FIT_JS*/</script>
+<script>/*SEARCH_JS*/</script>
+<script>/*UNICODE_JS*/</script>
+<script>
+(function () {
+  "use strict";
+
+  var term = null;
+  var fit = null;
+  var search = null;
+  var look = null;
+  var pendingWrites = 0;
+
+  function colour(value) { return value; }
+
+  function options(l) {
+    return {
+      allowProposedApi: true,
+      // The far end must not be able to write this machine's clipboard unless the embedder
+      // turned that on. xterm.js asks before acting on OSC 52, and this is the answer.
+      allowTransparency: false,
+      cursorBlink: l.cursorBlink,
+      fontFamily: l.fontFamily,
+      fontSize: l.fontSize,
+      scrollback: l.scrollback,
+      scrollSensitivity: l.scrollMultiplier,
+      theme: {
+        background: colour(l.background),
+        foreground: colour(l.foreground),
+        cursor: colour(l.cursor),
+        cursorAccent: colour(l.background),
+        selectionBackground: "rgba(128,128,160,0.4)"
+      }
+    };
+  }
+
+  window.tfxStart = function (lookJson) {
+    look = JSON.parse(lookJson);
+    term = new Terminal(options(look));
+    fit = new FitAddon.FitAddon();
+    search = new SearchAddon.SearchAddon();
+    term.loadAddon(fit);
+    term.loadAddon(search);
+    try {
+      term.loadAddon(new Unicode11Addon.Unicode11Addon());
+      term.unicode.activeVersion = "11";
+    } catch (noUnicodeAddon) { /* widths fall back to version 6 */ }
+
+    term.onData(function (data) { bridge.input(data); });
+    term.onBinary(function (data) { bridge.inputBinary(data); });
+    term.onResize(function (event) { bridge.resized(event.cols, event.rows); });
+    term.onBell(function () { bridge.bell(); });
+    term.onTitleChange(function (title) { bridge.title(title); });
+    term.onSelectionChange(function () {
+      if (look.copyOnSelect) {
+        var text = term.getSelection();
+        if (text) {
+          bridge.selected(text);
+          if (look.clearSelectionAfterCopy) { term.clearSelection(); }
+        }
+      }
+    });
+    // OSC 52. xterm.js hands the request over rather than acting on it; the embedder decides.
+    term.parser.registerOscHandler(52, function (payload) {
+      if (!look.allowRemoteClipboard) { return true; }
+      bridge.remoteClipboard(String(payload));
+      return true;
+    });
+
+    // Keys the embedder claims. Everything else is the shell's.
+    term.attachCustomKeyEventHandler(function (event) {
+      if (event.type !== "keydown") { return true; }
+      var control = event.ctrlKey && !event.altKey && !event.metaKey;
+      var command = event.metaKey && !event.ctrlKey && !event.altKey;
+      if ((control || command) && event.key === "c" && look.ctrlCCopies && term.hasSelection()) {
+        bridge.selected(term.getSelection());
+        if (look.clearSelectionAfterCopy) { term.clearSelection(); }
+        return false;
+      }
+      if ((control || command) && event.key === "v" && look.ctrlVPastes) {
+        bridge.pasteRequested();
+        return false;
+      }
+      if (bridge.claimsKey(event.key, event.ctrlKey, event.altKey, event.shiftKey,
+                           event.metaKey)) {
+        return false;
+      }
+      return true;
+    });
+
+    term.open(document.getElementById("screen"));
+    window.tfxFit();
+    bridge.ready();
+  };
+
+  window.tfxWrite = function (text) {
+    if (!term) { return; }
+    pendingWrites++;
+    term.write(text, function () { pendingWrites--; });
+  };
+
+  window.tfxIdle = function () { return pendingWrites === 0; };
+
+  window.tfxFit = function () {
+    if (!term || !fit) { return; }
+    try { fit.fit(); } catch (tooSmall) { /* a zero-sized view has no size to report */ }
+  };
+
+  window.tfxLook = function (lookJson) {
+    if (!term) { return; }
+    look = JSON.parse(lookJson);
+    var next = options(look);
+    term.options.cursorBlink = next.cursorBlink;
+    term.options.fontFamily = next.fontFamily;
+    term.options.fontSize = next.fontSize;
+    term.options.scrollback = next.scrollback;
+    term.options.scrollSensitivity = next.scrollSensitivity;
+    term.options.theme = next.theme;
+    document.getElementById("userCss").textContent = look.userCss || "";
+    window.tfxFit();
+  };
+
+  window.tfxSize = function () { return term ? term.cols + "x" + term.rows : "0x0"; };
+  window.tfxSelection = function () { return term ? term.getSelection() : ""; };
+  window.tfxPaste = function (text) { if (term) { term.paste(text); } };
+  window.tfxFocus = function () { if (term) { term.focus(); } };
+  window.tfxClear = function () { if (term) { term.clear(); } };
+  window.tfxScrollToBottom = function () { if (term) { term.scrollToBottom(); } };
+  window.tfxFind = function (text, forward) {
+    if (!term || !search) { return false; }
+    return forward ? search.findNext(text) : search.findPrevious(text);
+  };
+  window.tfxClearFind = function () { if (search) { search.clearDecorations(); } };
+  window.tfxScrollbackLines = function () {
+    return term ? term.buffer.active.length - term.rows : 0;
+  };
+  window.tfxScreenText = function () {
+    if (!term) { return ""; }
+    var buffer = term.buffer.active;
+    var lines = [];
+    for (var i = 0; i < term.rows; i++) {
+      var line = buffer.getLine(buffer.viewportY + i);
+      lines.push(line ? line.translateToString(true) : "");
+    }
+    return lines.join("\n");
+  };
+})();
+</script>
+<style id="userCss">/*USER_STYLE*/</style>
+</body>
+</html>
