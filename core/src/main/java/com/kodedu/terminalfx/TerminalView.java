@@ -50,6 +50,17 @@ public final class TerminalView extends Region implements TerminalScreen {
     private final List<Consumer<String>> remoteClipboard = new ArrayList<>();
     private final List<Runnable> whenReady = new ArrayList<>();
 
+    /**
+     * What was written before the page could draw it, waiting.
+     *
+     * <p>The UI thread's, like everything else that touches the renderer: {@link #write} is the
+     * embedder's own thread only in the sense that a session marshals onto this one first.
+     */
+    private final StringBuilder beforeReady = new StringBuilder();
+
+    /** How much of that is kept. Enough for a greeting and a refusal, not for a build log. */
+    private static final int WAITING_ROOM = 64 * 1024;
+
     private volatile boolean ready;
     private volatile TerminalSize size = new TerminalSize(80, 24);
     private TerminalLook look;
@@ -123,12 +134,31 @@ public final class TerminalView extends Region implements TerminalScreen {
         });
     }
 
-    /** Draws the text. The renderer takes it as output, never as script. */
+    /**
+     * Draws the text. The renderer takes it as output, never as script.
+     *
+     * <p>Text that arrives before the page has loaded is kept and drawn when it has. A terminal
+     * is opened and connected in the same breath, and the far end can be finished with it before
+     * a WebView has parsed its own document — a server that refuses the shell, a container that
+     * exits, a connection that drops during the handshake. Dropping those bytes means the one
+     * screen that would have said what happened comes up empty.
+     *
+     * <p>Bounded, because a page that never loads must not become a heap of output nobody will
+     * ever see. What is kept is the beginning rather than the end: the first thing a shell says
+     * is the greeting or the refusal, and that is what somebody needs.
+     */
     @Override
     public void write(String text) {
-        if (ready && text != null && !text.isEmpty()) {
-            call("tfxWrite", text);
+        if (text == null || text.isEmpty()) {
+            return;
         }
+        if (!ready) {
+            if (beforeReady.length() < WAITING_ROOM) {
+                beforeReady.append(text);
+            }
+            return;
+        }
+        call("tfxWrite", text);
     }
 
     /** Whether everything handed to {@link #write} has been drawn. */
@@ -283,6 +313,11 @@ public final class TerminalView extends Region implements TerminalScreen {
         public void ready() {
             ready = true;
             fit();
+            if (!beforeReady.isEmpty()) {
+                String waiting = beforeReady.toString();
+                beforeReady.setLength(0);
+                call("tfxWrite", waiting);
+            }
             List.copyOf(whenReady).forEach(Runnable::run);
             whenReady.clear();
             // The first layout pass may have happened before the page loaded, in which case

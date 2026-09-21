@@ -32,6 +32,35 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("what was written before the page loaded is drawn when it has")
+    void whatArrivedTooEarly() throws Exception {
+        // A terminal is opened and connected in the same breath, and a far end can be finished
+        // with it before a WebView has parsed its own document: a server that refuses the shell,
+        // a container that exits at once, a connection that drops during the handshake. Those
+        // bytes used to go nowhere, and the screen that would have said what happened came up
+        // empty -- at the one moment somebody most needs to be told.
+        // Made and written to in one turn of the UI thread: the page cannot have loaded, because
+        // loading it needs this thread and this thread is here. Made in a separate call and the
+        // engine has usually finished by the second one, which is the test quietly passing for
+        // the wrong reason.
+        TerminalView[] made = new TerminalView[1];
+        boolean[] readyAlready = new boolean[1];
+        Fx.run(() -> {
+            made[0] = new TerminalView(TerminalLook.dark());
+            readyAlready[0] = made[0].isReady();
+            made[0].write("the shell ended with status 0\r\n");
+        });
+        TerminalView view = made[0];
+        assertFalse(readyAlready[0], "the point of the test is that it is not up yet");
+
+        Fx.show(view, 900, 500);
+        Fx.waitUntil("the renderer came up", view::isReady);
+
+        Fx.waitUntil("what was said before it could draw",
+                () -> view.screenText().contains("the shell ended with status 0"));
+    }
+
+    @Test
     @DisplayName("draws ASCII, colour, Turkish, CJK, emoji and box drawing")
     void drawsWhatItIsSent() throws Exception {
         TerminalView view = opened(TerminalLook.dark());
