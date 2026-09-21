@@ -29,6 +29,46 @@
 
   function colour(value) { return value; }
 
+  // What key this is, in a WebView that often does not say.
+  //
+  // `KeyboardEvent.key` is the modern answer and the only one worth reading — except that the
+  // events this page receives are synthesised by JavaFX from its own, and in this engine `key`
+  // arrives empty for everything. Ctrl+C and Ctrl+V were compared against it, so neither
+  // copied nor pasted; the embedder was handed an empty name for every keystroke it was asked
+  // about. `keyCode` is deprecated everywhere and is what actually arrives here.
+  function keyName(event) {
+    if (event.key && event.key.length) { return event.key; }
+    var code = event.keyCode || event.which || 0;
+    if (code >= 112 && code <= 123) { return "F" + (code - 111); }
+    if (code >= 65 && code <= 90) {
+      var letter = String.fromCharCode(code);
+      return event.shiftKey ? letter : letter.toLowerCase();
+    }
+    if (code >= 48 && code <= 57) { return String.fromCharCode(code); }
+    switch (code) {
+      case 8: return "Backspace";
+      case 9: return "Tab";
+      case 13: return "Enter";
+      case 16: return "Shift";
+      case 17: return "Control";
+      case 18: return "Alt";
+      case 27: return "Escape";
+      case 32: return " ";
+      case 33: return "PageUp";
+      case 34: return "PageDown";
+      case 35: return "End";
+      case 36: return "Home";
+      case 37: return "ArrowLeft";
+      case 38: return "ArrowUp";
+      case 39: return "ArrowRight";
+      case 40: return "ArrowDown";
+      case 45: return "Insert";
+      case 46: return "Delete";
+      case 91: case 93: return "Meta";
+      default: return "";
+    }
+  }
+
   function options(l) {
     return {
       allowProposedApi: true,
@@ -50,8 +90,21 @@
     };
   }
 
+  // The page under the terminal wears the terminal's colour.
+  //
+  // A terminal is a whole number of rows and its box is not, so there is a strip at the bottom
+  // between the last row and the edge -- and the page's own background shows through it. The
+  // page's own background is white, whatever the terminal is wearing, which on a dark terminal
+  // is a bright band across the bottom of the window. It was there in every screenshot anybody
+  // took of this and nobody could say what it was.
+  function paintThePage(l) {
+    document.documentElement.style.background = l.background;
+    document.body.style.background = l.background;
+  }
+
   window.tfxStart = function (lookJson) {
     look = JSON.parse(lookJson);
+    paintThePage(look);
     term = new Terminal(options(look));
     fit = new FitAddon.FitAddon();
     search = new SearchAddon.SearchAddon();
@@ -86,18 +139,19 @@
     // Keys the embedder claims. Everything else is the shell's.
     term.attachCustomKeyEventHandler(function (event) {
       if (event.type !== "keydown") { return true; }
+      var name = keyName(event);
       var control = event.ctrlKey && !event.altKey && !event.metaKey;
       var command = event.metaKey && !event.ctrlKey && !event.altKey;
-      if ((control || command) && event.key === "c" && look.ctrlCCopies && term.hasSelection()) {
+      if ((control || command) && name === "c" && look.ctrlCCopies && term.hasSelection()) {
         bridge.selected(term.getSelection());
         if (look.clearSelectionAfterCopy) { term.clearSelection(); }
         return false;
       }
-      if ((control || command) && event.key === "v" && look.ctrlVPastes) {
+      if ((control || command) && name === "v" && look.ctrlVPastes) {
         bridge.pasteRequested();
         return false;
       }
-      if (bridge.claimsKey(event.key, event.ctrlKey, event.altKey, event.shiftKey,
+      if (bridge.claimsKey(name, event.ctrlKey, event.altKey, event.shiftKey,
                            event.metaKey)) {
         return false;
       }
@@ -125,6 +179,7 @@
   window.tfxLook = function (lookJson) {
     if (!term) { return; }
     look = JSON.parse(lookJson);
+    paintThePage(look);
     var next = options(look);
     term.options.cursorBlink = next.cursorBlink;
     term.options.fontFamily = next.fontFamily;
