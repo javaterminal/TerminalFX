@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.kodedu.terminalfx</groupId>
+    <artifactId>terminalfx-parent</artifactId>
+    <version>2.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>TerminalFX</name>
+    <description>A terminal for JavaFX applications</description>
+
+    <!--
+      2.0.0 is a rewrite and not a migration. The 1.x API (Builder / Terminal / TerminalTab /
+      TerminalConfig, and a TerminalView that started a PTY of its own) is gone rather than
+      deprecated: it could not express a terminal that is not a local shell, and it made every
+      consumer inherit pty4j and its natives. See README.adoc.
+
+      Two artifacts now:
+        terminalfx-core  — the terminal on the screen and the session contract. No PTY, no
+                           natives, no idea what it is connected to.
+        terminalfx-local — a shell on this machine, which is where pty4j and JNA live.
+    -->
+
+    <modules>
+        <module>core</module>
+        <module>local</module>
+        <module>example</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <javafx.version>26.0.2</javafx.version>
+        <!--
+          The unclassified org.openjfx jars are empty stubs; the classes and the module
+          descriptor are in the platform-classified ones. A `provided` dependency does not carry
+          its own transitives, so the classifier is named here rather than left to openjfx's own
+          profiles. Overridden by the profiles at the bottom of this file.
+        -->
+        <javafx.platform>linux</javafx.platform>
+        <pty4j.version>0.13.10</pty4j.version>
+        <junit.version>5.14.0</junit.version>
+        <monocle.version>jdk-21.0.1</monocle.version>
+    </properties>
+
+    <organization>
+        <name>TerminalFX</name>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://github.com/javaterminal/TerminalFX/blob/master/LICENSE</url>
+        </license>
+    </licenses>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.kodedu.terminalfx</groupId>
+                <artifactId>terminalfx-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-controls</artifactId>
+                <version>${javafx.version}</version>
+                <classifier>${javafx.platform}</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-web</artifactId>
+                <version>${javafx.version}</version>
+                <classifier>${javafx.platform}</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-graphics</artifactId>
+                <version>${javafx.version}</version>
+                <classifier>${javafx.platform}</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-base</artifactId>
+                <version>${javafx.version}</version>
+                <classifier>${javafx.platform}</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-media</artifactId>
+                <version>${javafx.version}</version>
+                <classifier>${javafx.platform}</classifier>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.pty4j</groupId>
+                <artifactId>pty4j</artifactId>
+                <version>${pty4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.github.sebivenlo</groupId>
+                <artifactId>openjfx-monocle</artifactId>
+                <version>${monocle.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.openjfx</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.14.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.4</version>
+                    <configuration>
+                        <!--
+                          Monocle plugs into the toolkit's internals, which are not exported to
+                          anyone. Test-only: nothing the library ships needs these.
+                        -->
+                        <argLine>
+                            --add-exports=javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+                            --add-exports=javafx.graphics/com.sun.glass.utils=ALL-UNNAMED
+                            --add-exports=javafx.graphics/com.sun.javafx.util=ALL-UNNAMED
+                            --add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                            --add-exports=javafx.graphics/com.sun.prism=ALL-UNNAMED
+                            --add-exports=javafx.base/com.sun.javafx.logging=ALL-UNNAMED
+                        </argLine>
+                        <!-- A headless toolkit, so the library's own tests run anywhere the
+                             build does. A real display is the embedder's acceptance run. -->
+                        <systemPropertyVariables>
+                            <!-- A test that waits for something that never happens is a bug in
+                                 the library or in the test, and either way it should report
+                                 rather than hang a build. -->
+                            <junit.jupiter.execution.timeout.default>45 s</junit.jupiter.execution.timeout.default>
+                            <java.awt.headless>true</java.awt.headless>
+                            <glass.platform>Monocle</glass.platform>
+                            <monocle.platform>Headless</monocle.platform>
+                            <prism.order>sw</prism.order>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>jetbrains-teams</id>
+            <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
+        </repository>
+        <repository>
+            <id>pty4j-releases</id>
+            <url>https://github.com/javaterminal/pty4j/raw/master/releases</url>
+        </repository>
+    </repositories>
+
+    <!--
+      The artifact is not on Central: consumers resolve it from this repository's own releases
+      directory, so a release is a deploy into it and a push. See README.adoc.
+    -->
+    <profiles>
+        <profile>
+            <id>mac-aarch64</id>
+            <activation>
+                <os><family>mac</family><arch>aarch64</arch></os>
+            </activation>
+            <properties><javafx.platform>mac-aarch64</javafx.platform></properties>
+        </profile>
+        <profile>
+            <id>mac-x64</id>
+            <activation>
+                <os><family>mac</family><arch>x86_64</arch></os>
+            </activation>
+            <properties><javafx.platform>mac</javafx.platform></properties>
+        </profile>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties><javafx.platform>win</javafx.platform></properties>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>repo</id>
+            <url>file://${maven.multiModuleProjectDirectory}/releases</url>
+        </repository>
+    </distributionManagement>
+</project>
