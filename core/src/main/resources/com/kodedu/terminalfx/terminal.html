@@ -142,12 +142,22 @@
       var name = keyName(event);
       var control = event.ctrlKey && !event.altKey && !event.metaKey;
       var command = event.metaKey && !event.ctrlKey && !event.altKey;
-      if ((control || command) && name === "c" && look.ctrlCCopies && term.hasSelection()) {
-        bridge.selected(term.getSelection());
-        if (look.clearSelectionAfterCopy) { term.clearSelection(); }
-        return false;
+      // Ctrl+Shift+C and Ctrl+Shift+V are a Linux terminal's copy and paste whatever the look
+      // says about the plain keys, which belong to the shell (^C, ^V). With Shift held the key
+      // is "C"/"V", so neither used to match: the copy did nothing, and the paste fell to the
+      // WebView's own, which typed the clipboard straight in past the embedder's preview.
+      var shifted = control && event.shiftKey;
+      var letter = name.length === 1 ? name.toLowerCase() : name;
+      if ((control || command) && letter === "c" && (look.ctrlCCopies || shifted)) {
+        if (term.hasSelection()) {
+          bridge.selected(term.getSelection());
+          if (look.clearSelectionAfterCopy) { term.clearSelection(); }
+          return false;
+        }
+        if (shifted) { return false; }
       }
-      if ((control || command) && name === "v" && look.ctrlVPastes) {
+      if ((control || command) && letter === "v" && (look.ctrlVPastes || shifted)) {
+        event.preventDefault();
         bridge.pasteRequested();
         return false;
       }
@@ -206,6 +216,7 @@
          + (modes.bracketedPasteMode ? "1" : "0");
   };
   window.tfxSelection = function () { return term ? term.getSelection() : ""; };
+  window.tfxSelectAll = function () { if (term) { term.selectAll(); } };
   window.tfxPaste = function (text) { if (term) { term.paste(text); } };
   window.tfxFocus = function () { if (term) { term.focus(); } };
   window.tfxClear = function () { if (term) { term.clear(); } };

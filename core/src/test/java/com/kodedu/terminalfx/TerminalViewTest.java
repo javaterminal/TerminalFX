@@ -155,6 +155,38 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("Ctrl+Shift+C and Ctrl+Shift+V are copy and paste, through the embedder")
+    void linuxCopyAndPaste() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        List<String> copied = new ArrayList<>();
+        int[] pastes = new int[1];
+        Fx.run(() -> {
+            view.onCopy(copied::add);
+            view.onPasteRequested(() -> pastes[0]++);
+            view.write("copy-canary\r\n");
+        });
+        Fx.waitUntil("the line was drawn", () -> view.screenText().contains("copy-canary"));
+        Fx.run(view::selectAll);
+
+        Fx.run(() -> pressIn(view, "C"));
+        Fx.waitUntil("Ctrl+Shift+C copied the selection", () -> !copied.isEmpty());
+        assertTrue(copied.get(0).contains("copy-canary"), copied.get(0));
+
+        // The WebView's own paste would type the clipboard in without asking the embedder,
+        // which is where a multi-line paste is previewed.
+        Fx.run(() -> pressIn(view, "V"));
+        Fx.waitUntil("Ctrl+Shift+V asked the embedder to paste", () -> pastes[0] == 1);
+    }
+
+    /** A Ctrl+Shift keystroke as the page receives it, at xterm.js's own input. */
+    private static void pressIn(TerminalView view, String key) {
+        view.getEngineForTest().executeScript(
+                "document.querySelector('.xterm-helper-textarea').dispatchEvent(new KeyboardEvent("
+                        + "'keydown', {key: '" + key + "', ctrlKey: true, shiftKey: true, "
+                        + "bubbles: true, cancelable: true}))");
+    }
+
+    @Test
     @DisplayName("ignores a clipboard write from the far end unless it was allowed")
     void remoteClipboardIsOffByDefault() throws Exception {
         TerminalView off = opened(TerminalLook.dark());

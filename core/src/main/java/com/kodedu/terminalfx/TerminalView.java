@@ -239,6 +239,13 @@ public final class TerminalView extends Region implements TerminalScreen {
         return ready ? String.valueOf(script("window.tfxSelection()")) : "";
     }
 
+    /** Selects everything in the buffer, scrollback included; Copy then takes all of it. */
+    public void selectAll() {
+        if (ready) {
+            script("window.tfxSelectAll()");
+        }
+    }
+
     public void paste(String text) {
         if (ready && text != null && !text.isEmpty()) {
             call("tfxPaste", text);
