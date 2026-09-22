@@ -61,6 +61,24 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("says which mode its keys are in, because two terminals are rarely in the same one")
+    void saysWhatModeItIsIn() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        assertFalse(Fx.ask(view::applicationCursorKeys), "a terminal starts in neither");
+        assertFalse(Fx.ask(view::bracketedPaste));
+
+        // What a program asks for when it wants the arrow keys to itself.
+        Fx.run(() -> view.write("\u001b[?1h"));
+        Fx.waitUntil("the mode to be set", view::applicationCursorKeys);
+
+        Fx.run(() -> view.write("\u001b[?2004h"));
+        Fx.waitUntil("bracketed paste too", view::bracketedPaste);
+
+        Fx.run(() -> view.write("\u001b[?1l"));
+        Fx.waitUntil("and off again", () -> !view.applicationCursorKeys());
+    }
+
+    @Test
     @DisplayName("draws ASCII, colour, Turkish, CJK, emoji and box drawing")
     void drawsWhatItIsSent() throws Exception {
         TerminalView view = opened(TerminalLook.dark());

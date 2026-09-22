@@ -192,6 +192,19 @@
   };
 
   window.tfxSize = function () { return term ? term.cols + "x" + term.rows : "0x0"; };
+
+  // The two modes that change what a keystroke means on the wire.
+  //
+  // A program running in the terminal turns these on and off as it likes -- an editor asks for
+  // application cursor keys, a shell with bracketed paste asks for that -- so two terminals side
+  // by side are routinely in different modes. Anything that means to send the same keystroke to
+  // both has to ask each of them what it is in, rather than copying one's bytes to the other.
+  window.tfxModes = function () {
+    if (!term) { return "00"; }
+    var modes = term.modes || {};
+    return (modes.applicationCursorKeysMode ? "1" : "0")
+         + (modes.bracketedPasteMode ? "1" : "0");
+  };
   window.tfxSelection = function () { return term ? term.getSelection() : ""; };
   window.tfxPaste = function (text) { if (term) { term.paste(text); } };
   window.tfxFocus = function () { if (term) { term.focus(); } };

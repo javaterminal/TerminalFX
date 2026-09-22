@@ -27,8 +27,16 @@ public interface TerminalScreen {
     TerminalSize size();
 
     /** What was typed. */
-    void onInput(Consumer<String> listener);
+    /**
+     * Tells this listener what is typed.
+     *
+     * @return how to stop listening. A session that has been replaced — a terminal that
+     *         reconnected into the same tab — must stop being told, or every reconnect leaves
+     *         one more dead listener on a screen that may live all day
+     */
+    Runnable onInput(Consumer<String> listener);
 
     /** The screen changed size — which is what the far end has to be told. */
-    void onResize(Consumer<TerminalSize> listener);
+    /** As {@link #onInput}, for the size. */
+    Runnable onResize(Consumer<TerminalSize> listener);
 }

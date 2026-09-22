@@ -185,13 +185,15 @@ public final class TerminalView extends Region implements TerminalScreen {
     }
 
     @Override
-    public void onInput(Consumer<String> listener) {
+    public Runnable onInput(Consumer<String> listener) {
         input.add(Objects.requireNonNull(listener));
+        return () -> input.remove(listener);
     }
 
     @Override
-    public void onResize(Consumer<TerminalSize> listener) {
+    public Runnable onResize(Consumer<TerminalSize> listener) {
         resized.add(Objects.requireNonNull(listener));
+        return () -> resized.remove(listener);
     }
 
     public void onBell(Runnable listener) {
@@ -273,6 +275,37 @@ public final class TerminalView extends Region implements TerminalScreen {
     /** How many lines are kept above the screen. For a test and for a memory budget. */
     public int scrollbackLines() {
         return ready ? ((Number) script("window.tfxScrollbackLines()")).intValue() : 0;
+    }
+
+    /**
+     * Whether the program at the far end has asked for application cursor keys.
+     *
+     * <p>The one mode an embedder has to know about, and only because of one thing: writing key
+     * sequences itself rather than through the terminal. An editor running at the far end turns
+     * this on and a shell sitting at its prompt does not, and Up is {@code ESC O A} in the first
+     * and {@code ESC [ A} in the second.
+     */
+    public boolean applicationCursorKeys() {
+        return modes().charAt(0) == '1';
+    }
+
+    /**
+     * Whether the far end has asked for bracketed paste.
+     *
+     * <p>Not needed to paste — {@link #paste(String)} asks the renderer, which knows its own
+     * mode — but an embedder deciding what to warn about may want to know.
+     */
+    public boolean bracketedPaste() {
+        return modes().charAt(1) == '1';
+    }
+
+    private String modes() {
+        if (!ready) {
+            return "00";
+        }
+        Object said = script("window.tfxModes()");
+        String flags = said == null ? "00" : String.valueOf(said);
+        return flags.length() < 2 ? "00" : flags;
     }
 
     /** What is on the screen, as text. For tests; not a public contract for embedders. */

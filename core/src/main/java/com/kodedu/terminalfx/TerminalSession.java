@@ -50,6 +50,8 @@ public final class TerminalSession implements AutoCloseable {
     private static final int OUTPUT_CHUNKS = 8;
 
     private final TerminalScreen view;
+    /** How to stop being told about input and size; run when this session closes. */
+    private final List<Runnable> stopListening;
     private final TerminalConnection connection;
     private final Executor blocking;
     private final Executor ui;
@@ -99,13 +101,17 @@ public final class TerminalSession implements AutoCloseable {
         this.blocking = Objects.requireNonNull(blocking, "blocking");
         this.ui = Objects.requireNonNull(ui, "ui");
 
-        view.onInput(this::send);
-        view.onResize(size -> {
-            pendingResize.set(size);
-            if (transportReady.get()) {
-                outgoing.offer(RESIZE);
-            }
-        });
+        // Kept so they can be given back. An embedder that reconnects builds a second session over
+        // the same screen, and the first one's listeners would otherwise stay on it for as long
+        // as the tab is open -- which for a terminal somebody works in is all day.
+        this.stopListening = List.of(
+                view.onInput(this::send),
+                view.onResize(size -> {
+                    pendingResize.set(size);
+                    if (transportReady.get()) {
+                        outgoing.offer(RESIZE);
+                    }
+                }));
     }
 
     /** What is drawing. The node itself is the embedder's; it made it. */
@@ -204,6 +210,7 @@ public final class TerminalSession implements AutoCloseable {
         if (!closed.compareAndSet(false, true)) {
             return;
         }
+        stopListening.forEach(Runnable::run);
         outgoing.clear();
         outgoing.offer(STOP);
         blocking.execute(() -> {

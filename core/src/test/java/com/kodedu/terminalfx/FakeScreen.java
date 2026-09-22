@@ -39,13 +39,20 @@ final class FakeScreen implements TerminalScreen {
     }
 
     @Override
-    public void onInput(Consumer<String> listener) {
+    public Runnable onInput(Consumer<String> listener) {
         input.add(listener);
+        return () -> input.remove(listener);
     }
 
     @Override
-    public void onResize(Consumer<TerminalSize> listener) {
+    public Runnable onResize(Consumer<TerminalSize> listener) {
         resized.add(listener);
+        return () -> resized.remove(listener);
+    }
+
+    /** How many are still listening, for a test about what a closed session lets go of. */
+    int listeners() {
+        return input.size() + resized.size();
     }
 
     void becomeReady() {

@@ -363,4 +363,23 @@ class TerminalSessionTest {
     private interface BooleanSupplier {
         boolean getAsBoolean();
     }
+
+    @Test
+    @DisplayName("a session that has closed stops being told what is typed")
+    void aClosedSessionLetsGoOfTheScreen() {
+        // An embedder that reconnects builds a second session over the same screen. The first one's
+        // listeners used to stay on it, so a terminal somebody worked in all day collected one
+        // dead listener per reconnect -- and every one of them was still being handed every
+        // keystroke.
+        FakeScreen screen = new FakeScreen();
+        FakeConnection connection = new FakeConnection();
+        TerminalSession session = session(screen, connection);
+        int listening = screen.listeners();
+        assertTrue(listening >= 2, "it listens for input and for size");
+
+        session.close();
+
+        assertEquals(0, screen.listeners(),
+                "and gives both back, so the next session over this screen is the only one");
+    }
 }
