@@ -109,7 +109,13 @@ class TerminalSessionTest {
             assertFalse(ready.isDone(), "the renderer has not come up yet");
 
             screen.becomeReady();
-            drainUi();
+            // Drained until it lands, as the other order is: the connection says it is open
+            // before it says it is ready, and a single drain could come between the two and
+            // leave the ready on the UI queue with nobody to run it (timed out in a release run).
+            for (int i = 0; i < 500 && !ready.isDone(); i++) {
+                drainUi();
+                Thread.sleep(10);
+            }
             ready.get(5, TimeUnit.SECONDS);
 
             // The first thing the far end is told is how big the screen is.

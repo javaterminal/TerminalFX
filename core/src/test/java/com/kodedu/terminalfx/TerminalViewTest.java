@@ -116,6 +116,25 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("fits itself again when its page is resized, with nobody in Java asking")
+    void refitsWhenItsPageResizes() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        Fx.waitUntil("it sized itself", () -> view.size().columns() > 50);
+        TerminalSize wide = Fx.ask(view::size);
+
+        // A fit measured before the page had its room: two columns, the least it will go to.
+        Fx.run(() -> view.getEngineForTest().executeScript(
+                "document.getElementById('screen').style.width = '10px'; window.tfxFit();"));
+        Fx.waitUntil("it was squeezed", () -> view.size().columns() == 2);
+
+        // The room arrives the way WebKit hands it over: as the page's own resize, a frame later.
+        Fx.run(() -> view.getEngineForTest().executeScript(
+                "document.getElementById('screen').style.width = '';"
+                + " window.dispatchEvent(new Event('resize'));"));
+        Fx.waitUntil("it fitted itself to the room", () -> view.size().equals(wide));
+    }
+
+    @Test
     @DisplayName("keeps only as much scrollback as it was told to")
     void scrollbackIsBounded() throws Exception {
         TerminalView view = opened(TerminalLook.dark().withScrollback(200));

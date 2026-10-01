@@ -5,10 +5,21 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.0
+:terminalfx-version: 2.0.1
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.1
+
+The terminal fits itself again when its page is resized. WebKit gives the page its size a frame
+after the JavaFX box has it, so a fit asked from Java before then measured a page with no room in
+it and left a terminal two columns wide; when the box had been sized before the page was ready,
+nothing asked again. The page now fits on its own resize as well.
+
+pty4j moves to 0.13.13 (still EPL-1.0, still on JNA 5.14.0), the tests to JUnit 6, and each jar
+now carries its licence in `META-INF/LICENSE`; terminalfx-core carries xterm.js's as well, in
+`META-INF/LICENSE.xterm.js`. Java 25 and JavaFX 26.0.2 are unchanged.
 
 == What changed in 2.0.0
 
@@ -93,6 +104,7 @@ onto the UI thread can be handed over as well; it defaults to `Platform.runLater
 
 == Licence
 
-MIT. xterm.js and its addons are MIT and are vendored in
-`core/src/main/resources/com/kodedu/terminalfx/`; pty4j (EPL-1.0) and JNA arrive only with
-`terminalfx-local`.
+MIT. xterm.js 6.0.0 and its addons (fit 0.11.0, search 0.16.0, unicode11 0.9.0) are MIT and are
+vendored unmodified in `core/src/main/resources/com/kodedu/terminalfx/`; their notices travel in
+the jar as `META-INF/LICENSE.xterm.js`, beside the library's own `META-INF/LICENSE`. pty4j
+(EPL-1.0) and JNA arrive only with `terminalfx-local`.

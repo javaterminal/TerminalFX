@@ -169,6 +169,11 @@
     });
 
     term.open(document.getElementById("screen"));
+    // The page takes the box's size a frame after the box has it. A fit asked from Java before
+    // then measures a page with no room in it and leaves a terminal two columns wide, and when
+    // the box was sized before the page was ready nothing in Java asks again. The page's own
+    // resize is when it has the room: fit then as well.
+    window.addEventListener("resize", function () { window.tfxFit(); });
     window.tfxFit();
     bridge.ready();
   };
