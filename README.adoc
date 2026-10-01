@@ -5,10 +5,17 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.1
+:terminalfx-version: 2.0.2
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.2
+
+Find reads every line once. It used xterm.js's search addon, which went back over a wrapped line
+once for every row the line covered, on the thread that draws the window: a single long line --
+a minified file, a log line with no breaks -- held the window for seconds each time Find answered.
+`clearFind()` is kept and now does nothing; what Find found stays selected so it can be copied.
 
 == What changed in 2.0.1
 

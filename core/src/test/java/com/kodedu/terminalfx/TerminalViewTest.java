@@ -162,6 +162,70 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("reads a line that wraps over hundreds of rows once, not once for every row")
+    void findReadsALongLineOnce() throws Exception {
+        // A minified file or a log line with no breaks in it is one line that the terminal wraps
+        // over hundreds of rows. xterm.js's search addon went back from every one of those rows to
+        // the row the line began on and read the whole line again, so the work grew with the square
+        // of the line's length -- on the thread that draws the window. One 60,000-character line
+        // froze the window for five to ten seconds each time Find answered "not found".
+        TerminalView view = opened(TerminalLook.dark().withScrollback(5000));
+        String line = "z".repeat(80_000);
+        Fx.run(() -> view.write("before the line\r\n" + line + "Needle-At-The-End\r\nafter the line\r\n"));
+        Fx.waitUntil("drawn", () -> view.screenText().contains("after the line"));
+
+        long started = System.nanoTime();
+        boolean found = Fx.ask(() -> view.find("not anywhere", true));
+        long took = (System.nanoTime() - started) / 1_000_000;
+        assertFalse(found);
+        assertTrue(took < 1000, "Find held the UI thread for " + took + " ms");
+
+        assertTrue(Fx.ask(() -> view.find("needle-at-the-end", true)));
+        assertEquals("Needle-At-The-End", Fx.ask(view::selection));
+    }
+
+    @Test
+    @DisplayName("Next goes on from what it found, Previous goes back, and both come round again")
+    void findGoesOnAndBack() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        Fx.run(() -> view.write("one apple\r\ntwo Apple\r\nthree APPLE and pear\r\n"));
+        Fx.waitUntil("drawn", () -> view.screenText().contains("pear"));
+
+        assertTrue(Fx.ask(() -> view.find("apple", true)));
+        assertEquals("apple", Fx.ask(view::selection));
+        assertTrue(Fx.ask(() -> view.find("apple", true)));
+        assertEquals("Apple", Fx.ask(view::selection));
+        assertTrue(Fx.ask(() -> view.find("apple", true)));
+        assertEquals("APPLE", Fx.ask(view::selection));
+        assertTrue(Fx.ask(() -> view.find("apple", true)), "from the last one it comes round");
+        assertEquals("apple", Fx.ask(view::selection));
+
+        assertTrue(Fx.ask(() -> view.find("apple", false)), "and back past the first");
+        assertEquals("APPLE", Fx.ask(view::selection));
+        assertTrue(Fx.ask(() -> view.find("apple", false)));
+        assertEquals("Apple", Fx.ask(view::selection));
+    }
+
+    @Test
+    @DisplayName("finds text across the place where a line wraps, and after wide letters")
+    void findAcrossAWrap() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        Fx.waitUntil("it sized itself", () -> view.size().columns() > 50);
+        int columns = Fx.ask(() -> view.size().columns());
+        // A wide letter is one character and two cells: where a match is in the text is not where
+        // it is on the screen, and selecting by the first would select the wrong cells.
+        String wide = "日本語";
+        String filler = "x".repeat(columns - wide.length() * 2 - 3);
+        Fx.run(() -> view.write(wide + filler + "spanning the wrap\r\n"));
+        Fx.waitUntil("drawn", () -> view.screenText().contains("the wrap"));
+
+        assertTrue(Fx.ask(() -> view.find("spanning", true)));
+        assertEquals("spanning", Fx.ask(view::selection));
+        assertTrue(Fx.ask(() -> view.find("本語", true)));
+        assertEquals("本語", Fx.ask(view::selection));
+    }
+
+    @Test
     @DisplayName("hands a title from the far end over as text, and runs nothing")
     void titlesAreData() throws Exception {
         TerminalView view = opened(TerminalLook.dark());

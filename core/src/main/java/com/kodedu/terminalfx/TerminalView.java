@@ -261,10 +261,11 @@ public final class TerminalView extends Region implements TerminalScreen {
         return Boolean.TRUE.equals(found);
     }
 
+    /**
+     * Kept for embedders that call it when they close their find bar. Find leaves nothing behind
+     * but its answer, selected, and that stays so it can be copied.
+     */
     public void clearFind() {
-        if (ready) {
-            script("window.tfxClearFind()");
-        }
     }
 
     public void clear() {
@@ -416,7 +417,6 @@ public final class TerminalView extends Region implements TerminalScreen {
                 .replace("/*XTERM_CSS*/", read("xterm.css"))
                 .replace("/*XTERM_JS*/", read("xterm.js"))
                 .replace("/*FIT_JS*/", read("addon-fit.js"))
-                .replace("/*SEARCH_JS*/", read("addon-search.js"))
                 .replace("/*UNICODE_JS*/", read("addon-unicode11.js"));
     }
 

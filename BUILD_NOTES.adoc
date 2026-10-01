@@ -24,9 +24,12 @@ Never write over a version that is already in `releases/`: somebody's build reso
 
 == The renderer
 
-`core/src/main/resources/com/kodedu/terminalfx/` carries xterm.js, its stylesheet and three
+`core/src/main/resources/com/kodedu/terminalfx/` carries xterm.js, its stylesheet and two
 addons, vendored rather than fetched. To move to a newer xterm.js, replace those files with the
-contents of the npm tarballs (`@xterm/xterm`, `@xterm/addon-fit`, `@xterm/addon-search`,
-`@xterm/addon-unicode11`) and run the tests: `TerminalViewTest` is what says whether the new one
-still draws Turkish, CJK, emoji and box drawing, still bounds its scrollback and still refuses a
-clipboard write from the far end.
+contents of the npm tarballs (`@xterm/xterm`, `@xterm/addon-fit`, `@xterm/addon-unicode11`) and
+run the tests: `TerminalViewTest` is what says whether the new one still draws Turkish, CJK, emoji
+and box drawing, still bounds its scrollback, still finds across a wrapped line in one pass and
+still refuses a clipboard write from the far end.
+
+Find is the page's own (`tfxFind` in `terminal.html`), not `@xterm/addon-search`: the addon read a
+wrapped line once for every row it covered, on the UI thread, and a long line froze the window.

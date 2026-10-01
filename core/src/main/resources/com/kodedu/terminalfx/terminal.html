@@ -15,7 +15,6 @@
 <div id="screen"></div>
 <script>/*XTERM_JS*/</script>
 <script>/*FIT_JS*/</script>
-<script>/*SEARCH_JS*/</script>
 <script>/*UNICODE_JS*/</script>
 <script>
 (function () {
@@ -23,7 +22,6 @@
 
   var term = null;
   var fit = null;
-  var search = null;
   var look = null;
   var pendingWrites = 0;
 
@@ -107,9 +105,7 @@
     paintThePage(look);
     term = new Terminal(options(look));
     fit = new FitAddon.FitAddon();
-    search = new SearchAddon.SearchAddon();
     term.loadAddon(fit);
-    term.loadAddon(search);
     try {
       term.loadAddon(new Unicode11Addon.Unicode11Addon());
       term.unicode.activeVersion = "11";
@@ -226,11 +222,160 @@
   window.tfxFocus = function () { if (term) { term.focus(); } };
   window.tfxClear = function () { if (term) { term.clear(); } };
   window.tfxScrollToBottom = function () { if (term) { term.scrollToBottom(); } };
+  // Find, in one pass over the buffer.
+  //
+  // This runs on the thread that draws the window, so its work has to be bounded by what the
+  // buffer holds. xterm.js's search addon looked a row at a time, and a row that carried on a
+  // line from the row above sent it back up to the row the line began on, to read the whole line
+  // again: the work grew with the square of the line's length. A minified file or a log line with
+  // no breaks wraps over hundreds of rows, and one of 60,000 characters held the window for five
+  // to ten seconds each time Find answered "not found". Here every line is read once, its rows
+  // joined, and searched as one string.
+  function lineFrom(buffer, head) {
+    var rows = [];
+    var starts = [];
+    var length = 0;
+    var row = head;
+    var line = buffer.getLine(row);
+    while (line) {
+      var next = buffer.getLine(row + 1);
+      var wraps = !!(next && next.isWrapped);
+      var text = line.translateToString(!wraps);
+      starts.push(length);
+      rows.push(text);
+      length += text.length;
+      if (!wraps) { break; }
+      row++;
+      line = next;
+    }
+    return { head: head, last: row, text: rows.join(""), starts: starts };
+  }
+
+  function lineHeadOf(buffer, row) {
+    while (row > 0) {
+      var line = buffer.getLine(row);
+      if (!line || !line.isWrapped) { break; }
+      row--;
+    }
+    return row;
+  }
+
+  // A wide letter is one character and two cells, an empty cell is a space, and the second half of
+  // a wide letter is nothing at all: where a match is in the text is not where it is on the screen.
+  function cellOf(row, index) {
+    var seen = 0;
+    var cell;
+    for (var x = 0; x < row.length; x++) {
+      cell = row.getCell(x, cell);
+      if (cell.getWidth() === 0) { continue; }
+      if (seen >= index) { return x; }
+      seen += cell.getChars().length || 1;
+    }
+    return row.length;
+  }
+
+  function indexOfCell(row, column) {
+    var seen = 0;
+    var cell;
+    for (var x = 0; x < Math.min(column, row.length); x++) {
+      cell = row.getCell(x, cell);
+      if (cell.getWidth() === 0) { continue; }
+      seen += cell.getChars().length || 1;
+    }
+    return seen;
+  }
+
+  function placeOf(buffer, read, index) {
+    var part = read.starts.length - 1;
+    while (part > 0 && read.starts[part] > index) { part--; }
+    var row = read.head + part;
+    return { row: row, column: cellOf(buffer.getLine(row), index - read.starts[part]) };
+  }
+
+  function indexIn(buffer, read, row, column) {
+    return read.starts[row - read.head] + indexOfCell(buffer.getLine(row), column);
+  }
+
+  function escaped(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // The first match at or after `from`, or the last one before `before`; -1 when there is none.
+  function matchIn(text, pattern, from, before) {
+    pattern.lastIndex = 0;
+    var found = -1;
+    var match;
+    if (before === undefined) {
+      pattern.lastIndex = from;
+      match = pattern.exec(text);
+      return match ? match.index : -1;
+    }
+    while ((match = pattern.exec(text)) !== null && match.index < before) {
+      found = match.index;
+      pattern.lastIndex = match.index + 1;
+    }
+    return found;
+  }
+
+  function show(buffer, read, index, length) {
+    var start = placeOf(buffer, read, index);
+    var end = placeOf(buffer, read, index + length);
+    var cells = (end.row - start.row) * term.cols + (end.column - start.column);
+    term.select(start.column, start.row, cells);
+    if (start.row < buffer.viewportY || start.row >= buffer.viewportY + term.rows) {
+      term.scrollToLine(Math.max(0, start.row - Math.floor(term.rows / 2)));
+    }
+  }
+
   window.tfxFind = function (text, forward) {
-    if (!term || !search) { return false; }
-    return forward ? search.findNext(text) : search.findPrevious(text);
+    if (!term || !text) { return false; }
+    var buffer = term.buffer.active;
+    var pattern = new RegExp(escaped(text), "gi");
+    var lastRow = buffer.length - 1;
+    var at = term.getSelectionPosition();
+    var again = at && term.getSelection().toLowerCase() === text.toLowerCase();
+    var row;
+    var column;
+    if (forward) {
+      row = at ? (again ? at.end.y : at.start.y) : 0;
+      column = at ? (again ? at.end.x : at.start.x) : 0;
+    } else {
+      row = at ? at.start.y : lastRow;
+      column = at ? at.start.x : term.cols;
+    }
+    var first = lineFrom(buffer, lineHeadOf(buffer, Math.min(row, lastRow)));
+    var offset = indexIn(buffer, first, Math.min(row, first.last), column);
+    var read = first;
+    var found;
+    if (forward) {
+      found = matchIn(read.text, pattern, offset);
+      while (found < 0) {
+        var head = read.last + 1 > lastRow ? 0 : read.last + 1;
+        if (head === first.head) {
+          // Round to the line it began in: anything at or after where it began was looked at.
+          found = matchIn(first.text, pattern, 0);
+          read = first;
+          break;
+        }
+        read = lineFrom(buffer, head);
+        found = matchIn(read.text, pattern, 0);
+      }
+    } else {
+      found = matchIn(read.text, pattern, 0, offset);
+      while (found < 0) {
+        var previous = read.head === 0 ? lastRow : read.head - 1;
+        read = lineFrom(buffer, lineHeadOf(buffer, previous));
+        if (read.head === first.head) {
+          found = matchIn(first.text, pattern, 0, first.text.length + 1);
+          break;
+        }
+        found = matchIn(read.text, pattern, 0, read.text.length + 1);
+      }
+    }
+    if (found < 0) { return false; }
+    show(buffer, read, found, text.length);
+    return true;
   };
-  window.tfxClearFind = function () { if (search) { search.clearDecorations(); } };
   window.tfxScrollbackLines = function () {
     return term ? term.buffer.active.length - term.rows : 0;
   };
