@@ -29,6 +29,10 @@ public final class TerminalBridge {
 
         void remoteClipboard(String payload);
 
+        void link(String uri);
+
+        void linkHovered(String uri);
+
         boolean claimsKey(String key, boolean control, boolean alt, boolean shift, boolean meta);
     }
 
@@ -73,6 +77,16 @@ public final class TerminalBridge {
 
     public void remoteClipboard(String payload) {
         listener.remoteClipboard(payload);
+    }
+
+    /** A link the far end wrote (OSC 8), Ctrl+clicked; http and https only, xterm.js's rule. */
+    public void link(String uri) {
+        listener.link(uri);
+    }
+
+    /** The pointer came to rest on such a link, or left it: the empty string. */
+    public void linkHovered(String uri) {
+        listener.linkHovered(uri);
     }
 
     public boolean claimsKey(String key, boolean control, boolean alt, boolean shift,

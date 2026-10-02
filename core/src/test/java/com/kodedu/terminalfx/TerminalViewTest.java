@@ -135,6 +135,28 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("hands an OSC 8 link to the embedder on Ctrl+click, and its address on hover")
+    void linksReachTheEmbedder() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        List<String> clicked = new java.util.concurrent.CopyOnWriteArrayList<>();
+        List<java.util.Optional<String>> hovered = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Fx.run(() -> {
+            view.onLink(clicked::add);
+            view.onLinkHover(hovered::add);
+        });
+
+        Fx.run(() -> view.getEngineForTest().executeScript(
+                "window.tfxLinks.hover({}, 'https://example.com/a');"
+                + " window.tfxLinks.activate({ctrlKey: false}, 'https://example.com/a');"
+                + " window.tfxLinks.activate({ctrlKey: true}, 'https://example.com/a');"
+                + " window.tfxLinks.leave();"));
+
+        assertEquals(List.of("https://example.com/a"), clicked, "a plain click is a selection");
+        assertEquals(List.of(java.util.Optional.of("https://example.com/a"), java.util.Optional.empty()),
+                hovered);
+    }
+
+    @Test
     @DisplayName("keeps only as much scrollback as it was told to")
     void scrollbackIsBounded() throws Exception {
         TerminalView view = opened(TerminalLook.dark().withScrollback(200));

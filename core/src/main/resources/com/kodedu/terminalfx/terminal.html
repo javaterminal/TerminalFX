@@ -78,6 +78,11 @@
       fontSize: l.fontSize,
       scrollback: l.scrollback,
       scrollSensitivity: l.scrollMultiplier,
+      // OSC 8 links. xterm.js's own answer to a click is window.confirm and window.open, which a
+      // WebView answers with nothing: a link did nothing at all. Handed to the embedder instead,
+      // on Ctrl+click as in other terminals, with the address on hover. allowNonHttpProtocols
+      // stays off, so only http and https reach it.
+      linkHandler: links,
       theme: {
         background: colour(l.background),
         foreground: colour(l.foreground),
@@ -99,6 +104,15 @@
     document.documentElement.style.background = l.background;
     document.body.style.background = l.background;
   }
+
+  var links = {
+    activate: function (event, uri) {
+      if (event && (event.ctrlKey || event.metaKey)) { bridge.link(String(uri)); }
+    },
+    hover: function (event, uri) { bridge.linkHovered(String(uri)); },
+    leave: function () { bridge.linkHovered(""); }
+  };
+  window.tfxLinks = links;
 
   window.tfxStart = function (lookJson) {
     look = JSON.parse(lookJson);

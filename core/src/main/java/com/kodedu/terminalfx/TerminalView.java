@@ -48,6 +48,8 @@ public final class TerminalView extends Region implements TerminalScreen {
     private final List<Consumer<String>> copied = new ArrayList<>();
     private final List<Runnable> pastes = new ArrayList<>();
     private final List<Consumer<String>> remoteClipboard = new ArrayList<>();
+    private final List<Consumer<String>> links = new ArrayList<>();
+    private final List<Consumer<java.util.Optional<String>>> linksHovered = new ArrayList<>();
     private final List<Runnable> whenReady = new ArrayList<>();
 
     /**
@@ -221,6 +223,24 @@ public final class TerminalView extends Region implements TerminalScreen {
      */
     public void onRemoteClipboard(Consumer<String> listener) {
         remoteClipboard.add(Objects.requireNonNull(listener));
+    }
+
+    /**
+     * A link the far end wrote (OSC 8) was Ctrl+clicked, Cmd+clicked on a Mac. Only http and
+     * https links arrive; a {@code javascript:} or {@code file:} one never does. The address is
+     * the far end's: the embedder decides whether to open it.
+     */
+    public void onLink(Consumer<String> listener) {
+        links.add(Objects.requireNonNull(listener));
+    }
+
+    /**
+     * The pointer rests on such a link -- its address, for the embedder to show before anybody
+     * clicks -- or has left it: empty. Without it a link looked like any text and its address
+     * could not be read (RemoFX ASK-132).
+     */
+    public void onLinkHover(Consumer<java.util.Optional<String>> listener) {
+        linksHovered.add(Objects.requireNonNull(listener));
     }
 
     /** Which keystrokes the embedder takes before the shell sees them. */
@@ -403,6 +423,18 @@ public final class TerminalView extends Region implements TerminalScreen {
         @Override
         public void remoteClipboard(String payload) {
             remoteClipboard.forEach(listener -> listener.accept(payload));
+        }
+
+        @Override
+        public void link(String uri) {
+            links.forEach(listener -> listener.accept(uri));
+        }
+
+        @Override
+        public void linkHovered(String uri) {
+            java.util.Optional<String> on = uri == null || uri.isEmpty()
+                    ? java.util.Optional.empty() : java.util.Optional.of(uri);
+            linksHovered.forEach(listener -> listener.accept(on));
         }
 
         @Override
