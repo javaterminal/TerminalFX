@@ -66,6 +66,7 @@ public final class TerminalView extends Region implements TerminalScreen {
     private volatile boolean ready;
     private volatile TerminalSize size = new TerminalSize(80, 24);
     private TerminalLook look;
+    private final Runnable sound;
     private KeyClaim keyClaim = (key, control, alt, shift, meta) -> false;
 
     /** Whether a keystroke belongs to the embedder rather than to the shell. */
@@ -75,7 +76,12 @@ public final class TerminalView extends Region implements TerminalScreen {
     }
 
     public TerminalView(TerminalLook look) {
+        this(look, Bell::play);
+    }
+
+    TerminalView(TerminalLook look, Runnable sound) {
         this.look = Objects.requireNonNull(look, "look");
+        this.sound = Objects.requireNonNull(sound, "sound");
         this.bridge = new TerminalBridge(new Listening());
         getChildren().add(web);
         web.setContextMenuEnabled(false);
@@ -402,6 +408,9 @@ public final class TerminalView extends Region implements TerminalScreen {
 
         @Override
         public void bell() {
+            if (look.audibleBell()) {
+                sound.run();
+            }
             bells.forEach(Runnable::run);
         }
 
@@ -473,6 +482,7 @@ public final class TerminalView extends Region implements TerminalScreen {
                 + ",\"cursor\":" + quote(css(look.cursor()))
                 + ",\"cursorBlink\":" + look.cursorBlink()
                 + ",\"scrollback\":" + look.scrollback()
+                + ",\"scrollbarVisible\":" + look.scrollbarVisible()
                 + ",\"scrollMultiplier\":" + look.scrollMultiplier()
                 + ",\"copyOnSelect\":" + look.copyOnSelect()
                 + ",\"clearSelectionAfterCopy\":" + look.clearSelectionAfterCopy()

@@ -8,6 +8,7 @@ module com.kodedu.terminalfx {
 
     requires javafx.controls;
     requires javafx.web;
+    requires javafx.media;
     requires jdk.jsobject;
 
     exports com.kodedu.terminalfx;

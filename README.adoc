@@ -5,10 +5,17 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.2
+:terminalfx-version: 2.0.3
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.3
+
+The scrollbar follows `TerminalLook.scrollbarVisible()` when the terminal opens and when its
+look changes. Hiding it keeps scrollback available. User CSS is also applied on first opening,
+as well as on later changes. When `audibleBell()` is enabled, BEL plays the bundled short sound
+away from the application thread; `onBell` callbacks still receive every BEL.
 
 == What changed in 2.0.2
 

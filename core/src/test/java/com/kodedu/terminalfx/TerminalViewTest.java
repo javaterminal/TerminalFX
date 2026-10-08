@@ -32,6 +32,62 @@ class TerminalViewTest {
     }
 
     @Test
+    void scrollbarChangesOnTheExistingRenderer() throws Exception {
+        TerminalView view = opened(TerminalLook.dark().withScrollbarVisible(false));
+        String width = "getComputedStyle(document.querySelector('.xterm-viewport'), '::-webkit-scrollbar').width";
+        assertEquals("0px", Fx.ask(() -> view.getEngineForTest().executeScript(width)));
+        Fx.run(() -> view.look(view.look().withScrollbarVisible(true)));
+        assertNotEquals("0px", Fx.ask(() -> view.getEngineForTest().executeScript(width)));
+        Fx.run(() -> {
+            view.look(view.look().withScrollbarVisible(false));
+            view.write("first hidden line\r\n" + "line\r\n".repeat(100) + "last hidden line\r\n");
+        });
+        Fx.waitUntil("scrollback was drawn", view::isIdle);
+        assertTrue(Fx.ask(view::scrollbackLines) > 50);
+        assertTrue(Fx.ask(() -> view.find("first hidden line", true)));
+        assertTrue(Fx.ask(view::screenText).contains("first hidden line"), "hidden scrollbars must allow navigation");
+    }
+
+    @Test
+    void userCssIsAppliedBeforeTheFirstFitAndCanBeReplaced() throws Exception {
+        TerminalView view = opened(TerminalLook.dark().withUserCss("#screen { padding: 23px; }"));
+        String padding = "getComputedStyle(document.getElementById('screen')).paddingLeft";
+        assertEquals("23px", Fx.ask(() -> view.getEngineForTest().executeScript(padding)));
+        Fx.run(() -> view.look(view.look().withUserCss("#screen { padding: 7px; }")));
+        assertEquals("7px", Fx.ask(() -> view.getEngineForTest().executeScript(padding)));
+        Fx.run(() -> view.look(view.look().withUserCss("")));
+        assertEquals("0px", Fx.ask(() -> view.getEngineForTest().executeScript(padding)));
+    }
+
+    @Test
+    void audibleBellCanBeChangedWithoutLosingRawBellEvents() throws Exception {
+        List<String> sounds = new java.util.concurrent.CopyOnWriteArrayList<>();
+        List<String> raw = new java.util.concurrent.CopyOnWriteArrayList<>();
+        TerminalView view = Fx.ask(() -> new TerminalView(TerminalLook.dark().withAudibleBell(false),
+                () -> sounds.add("sound")));
+        Fx.show(view, 900, 500);
+        Fx.waitUntil("ready", view::isReady);
+        Fx.run(() -> {
+            view.onBell(() -> raw.add("bell"));
+            view.write("\u0007");
+        });
+        Fx.waitUntil("silent BEL delivered", () -> raw.size() == 1);
+        assertTrue(sounds.isEmpty());
+        Fx.run(() -> {
+            view.look(view.look().withAudibleBell(true));
+            view.write("\u0007");
+        });
+        Fx.waitUntil("audible BEL delivered", () -> raw.size() == 2);
+        assertEquals(1, sounds.size());
+        Fx.run(() -> {
+            view.look(view.look().withAudibleBell(false));
+            view.write("\u0007");
+        });
+        Fx.waitUntil("disabled BEL delivered", () -> raw.size() == 3);
+        assertEquals(1, sounds.size());
+    }
+
+    @Test
     @DisplayName("what was written before the page loaded is drawn when it has")
     void whatArrivedTooEarly() throws Exception {
         // A terminal is opened and connected in the same breath, and a far end can be finished
