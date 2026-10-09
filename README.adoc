@@ -92,6 +92,14 @@ session.start();
 stage.setScene(new Scene(view, 900, 520));
 ----
 
+== Releasing
+
+Update the version in the parent and all three module POMs, and the version attribute in this
+README. Run `mvn clean deploy`: the clean build also updates the version embedded in each Java
+module descriptor. Deploy writes the library JARs, source JARs, POMs and Maven metadata into
+`releases/`; the example is built but not published. Commit the source and generated release
+files, then push `master` so consumers can resolve the version from the repository above.
+
 == Connecting it to something else
 
 Implement `TerminalConnection`: four methods, none of them about JavaFX.
