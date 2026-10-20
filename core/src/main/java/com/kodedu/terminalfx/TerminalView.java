@@ -176,10 +176,11 @@ public final class TerminalView extends Region implements TerminalScreen {
 
     /** Dresses the terminal again, live. */
     public void look(TerminalLook look) {
-        this.look = Objects.requireNonNull(look, "look");
+        Objects.requireNonNull(look, "look");
         if (ready) {
             call("tfxLook", json(look));
         }
+        this.look = look;
     }
 
     public TerminalLook look() {
@@ -269,6 +270,13 @@ public final class TerminalView extends Region implements TerminalScreen {
     public void selectAll() {
         if (ready) {
             script("window.tfxSelectAll()");
+        }
+    }
+
+    /** Requests a copy through the embedder and applies the selection preference, including menu copies. */
+    public void copySelection() {
+        if (ready) {
+            script("window.tfxCopySelection()");
         }
     }
 

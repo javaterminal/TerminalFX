@@ -237,6 +237,13 @@
   };
   window.tfxSelection = function () { return term ? term.getSelection() : ""; };
   window.tfxSelectAll = function () { if (term) { term.selectAll(); } };
+  window.tfxCopySelection = function () {
+    if (!term) { return; }
+    var text = term.getSelection();
+    if (!text) { return; }
+    bridge.selected(text);
+    if (look.clearSelectionAfterCopy) { term.clearSelection(); }
+  };
   window.tfxPaste = function (text) { if (term) { term.paste(text); } };
   window.tfxFocus = function () { if (term) { term.focus(); } };
   window.tfxClear = function () { if (term) { term.clear(); } };

@@ -16,7 +16,7 @@ import java.util.Objects;
  * about, so there is no moment in which a terminal is wearing half of two looks.
  *
  * @param fontFamily             a CSS font stack; the renderer measures the first face it has
- * @param fontSize               in points
+ * @param fontSize               in CSS pixels
  * @param background             the page behind the text
  * @param foreground             the default text colour
  * @param cursor                 the block or bar
@@ -61,6 +61,9 @@ public record TerminalLook(
         Objects.requireNonNull(userCss, "userCss");
         if (fontSize < 1) {
             throw new IllegalArgumentException("fontSize " + fontSize);
+        }
+        if (!Double.isFinite(scrollMultiplier) || scrollMultiplier <= 0) {
+            throw new IllegalArgumentException("scrollMultiplier must be finite and positive: " + scrollMultiplier);
         }
         if (scrollback < 0) {
             throw new IllegalArgumentException("scrollback " + scrollback);

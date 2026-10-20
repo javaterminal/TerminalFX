@@ -5,10 +5,20 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.3
+:terminalfx-version: 2.0.4
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.4
+
+`TerminalLook` rejects zero, negative and non-finite scroll multipliers before they reach the
+renderer. Those values could interrupt a live appearance update after the font changed but before
+the colours and terminal size were updated. `TerminalView.look()` records the new look only after
+the renderer accepts it.
+
+`TerminalView.copySelection()` sends the selection to the embedder's `onCopy` callback and honours
+`clearSelectionAfterCopy`, so application menus can use the same preference as keyboard copies.
 
 == What changed in 2.0.3
 

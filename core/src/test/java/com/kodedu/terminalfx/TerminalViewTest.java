@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The renderer, in a real WebView: what it draws, what size it says it is, and what it refuses.
@@ -29,6 +30,38 @@ class TerminalViewTest {
         Fx.show(view, 900, 500);
         Fx.waitUntil("the renderer came up", view::isReady);
         return view;
+    }
+
+    @Test
+    void menuCopyUsesTheSelectionPreference() throws Exception {
+        TerminalView view = opened(TerminalLook.dark().withClearSelectionAfterCopy(false));
+        List<String> copied = new ArrayList<>();
+        Fx.run(() -> { view.onCopy(copied::add); view.write("copy from menu"); });
+        Fx.waitUntil("output drawn", view::isIdle);
+        Fx.run(() -> { view.selectAll(); view.copySelection(); });
+        assertTrue(copied.getFirst().contains("copy from menu"));
+        assertFalse(Fx.ask(view::selection).isEmpty());
+        Fx.run(() -> { view.look(view.look().withClearSelectionAfterCopy(true)); view.copySelection(); });
+        assertEquals(2, copied.size());
+        assertEquals("", Fx.ask(view::selection));
+    }
+
+    @Test
+    void invalidScrollSpeedCannotPartiallyApplyALook() throws Exception {
+        TerminalView view = opened(TerminalLook.dark().withFontSize(14));
+        TerminalLook before = Fx.ask(view::look);
+        int columns = Fx.ask(() -> view.size().columns());
+        for (double invalid : new double[]{0, -1, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
+            assertThrows(IllegalArgumentException.class, () -> before.withScrollMultiplier(invalid));
+        }
+        assertEquals(before, Fx.ask(view::look));
+        Fx.run(() -> view.look(before.withFontSize(28).withScrollMultiplier(0.1)
+                .withForeground(javafx.scene.paint.Color.RED)));
+        assertEquals("28px", Fx.ask(() -> view.getEngineForTest().executeScript(
+                "getComputedStyle(document.querySelector('.xterm-rows')).fontSize")));
+        assertTrue(Fx.ask(() -> view.size().columns()) < columns / 1.8, "font change must resize the terminal");
+        assertEquals("rgb(255, 0, 0)", Fx.ask(() -> view.getEngineForTest().executeScript(
+                "getComputedStyle(document.querySelector('.xterm-rows')).color")));
     }
 
     @Test
