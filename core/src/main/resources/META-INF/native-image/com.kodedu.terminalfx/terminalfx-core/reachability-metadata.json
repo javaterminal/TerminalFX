@@ -1,0 +1,34 @@
+{
+  "comment": [
+    "What a native program needs of terminalfx-core, which GraalVM reads from this jar. A JVM reads nothing here.",
+    "The page calls TerminalBridge's public methods by their names, and WebKit finds them by reflection: without this the native terminal shows no prompt (bridge.ready is not a function).",
+    "TerminalView loads the page, the renderer and the bell from this jar by name."
+  ],
+  "reflection": [
+    {
+      "type": "com.kodedu.terminalfx.TerminalBridge",
+      "jniAccessible": true,
+      "allPublicMethods": true
+    }
+  ],
+  "resources": [
+    {
+      "glob": "com/kodedu/terminalfx/terminal.html"
+    },
+    {
+      "glob": "com/kodedu/terminalfx/xterm.js"
+    },
+    {
+      "glob": "com/kodedu/terminalfx/xterm.css"
+    },
+    {
+      "glob": "com/kodedu/terminalfx/addon-fit.js"
+    },
+    {
+      "glob": "com/kodedu/terminalfx/addon-unicode11.js"
+    },
+    {
+      "glob": "com/kodedu/terminalfx/bell.wav"
+    }
+  ]
+}

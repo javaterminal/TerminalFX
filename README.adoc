@@ -5,10 +5,18 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.4
+:terminalfx-version: 2.0.5
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.5
+
+terminalfx-core carries what a GraalVM native program needs of it, in
+`META-INF/native-image/com.kodedu.terminalfx/terminalfx-core/reachability-metadata.json`: the page
+calls `TerminalBridge`'s public methods by name, and it loads the page, the renderer and the bell
+from the jar. A native program reads the file from the jar, so an embedder no longer records or
+registers them itself. Without them the native terminal showed no prompt.
 
 == What changed in 2.0.4
 
