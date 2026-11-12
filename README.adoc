@@ -5,10 +5,21 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.5
+:terminalfx-version: 2.0.6
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.6
+
+A terminal measures its box the same wherever it comes from. The fit was xterm.js's addon, which
+divides the room by a cell width the renderer derives from the columns the terminal has at that
+moment, so the answer depended on the answer before it. In 886 pixels of room, a terminal 104
+columns wide was told 104 and one 105 wide was told 105: at about one width in twenty-seven a new
+terminal, coming up from a page with no room yet, stopped one column short of what the same box
+gave after any resize, and asking again changed nothing. The count is now the page's own (`tfxFit`
+in `terminal.html`), made from the cell's size in device pixels by the renderer's own rounding.
+`@xterm/addon-fit` is no longer in the jar.
 
 == What changed in 2.0.5
 
@@ -144,7 +155,7 @@ onto the UI thread can be handed over as well; it defaults to `Platform.runLater
 
 == Licence
 
-MIT. xterm.js 6.0.0 and its addons (fit 0.11.0, search 0.16.0, unicode11 0.9.0) are MIT and are
+MIT. xterm.js 6.0.0 and its unicode11 addon (0.9.0) are MIT and are
 vendored unmodified in `core/src/main/resources/com/kodedu/terminalfx/`; their notices travel in
 the jar as `META-INF/LICENSE.xterm.js`, beside the library's own `META-INF/LICENSE`. pty4j
 (EPL-1.0) and JNA arrive only with `terminalfx-local`.

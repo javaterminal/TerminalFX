@@ -15,14 +15,12 @@
 <body>
 <div id="screen"></div>
 <script>/*XTERM_JS*/</script>
-<script>/*FIT_JS*/</script>
 <script>/*UNICODE_JS*/</script>
 <script>
 (function () {
   "use strict";
 
   var term = null;
-  var fit = null;
   var look = null;
   var pendingWrites = 0;
 
@@ -124,8 +122,6 @@
     look = JSON.parse(lookJson);
     paintThePage(look);
     term = new Terminal(options(look));
-    fit = new FitAddon.FitAddon();
-    term.loadAddon(fit);
     try {
       term.loadAddon(new Unicode11Addon.Unicode11Addon());
       term.unicode.activeVersion = "11";
@@ -202,9 +198,53 @@
 
   window.tfxIdle = function () { return pendingWrites === 0; };
 
+  // How many cells the box has room for, each way.
+  //
+  // The page's own, not @xterm/addon-fit. The addon divides the room by the renderer's cell
+  // width, and that width is the row rounded to a whole pixel and divided by the columns the
+  // terminal has at that moment -- so the answer depended on the answer before it. In 886 pixels,
+  // with letters 8.4375 wide, a terminal 104 columns wide was told 104 (878 / 104 = 8.4423, and
+  // 886 / 8.4423 = 104.95) and one 105 wide was told 105 (886 / 105 = 8.4381). A new terminal
+  // comes up from the two columns of a page with no room yet, so at such a width it stopped one
+  // column short and stayed there until its box was next resized; asking again changed nothing.
+  //
+  // What does not depend on the columns is the cell's own size in device pixels, and the
+  // renderer's own rule for what n of them take: round(n * cell / dpr) CSS pixels. The count is
+  // the most that rule lets into the room. The room is the box, less the terminal's padding and
+  // the lane the renderer keeps for its scrollbar whenever there is scrollback to scroll.
+  var SCROLLBAR_LANE = 14;
+
+  function cellsIn(room, cell, dpr) {
+    var n = Math.floor(room * dpr / cell);
+    while (Math.round((n + 1) * cell / dpr) <= room) { n++; }
+    while (n > 0 && Math.round(n * cell / dpr) > room) { n--; }
+    return n;
+  }
+
+  function fitted() {
+    var element = term.element;
+    if (!element || !element.parentElement) { return null; }
+    var cell = term._core._renderService.dimensions.device.cell;
+    if (!(cell.width > 0) || !(cell.height > 0)) { return null; }
+    var box = window.getComputedStyle(element.parentElement);
+    var own = window.getComputedStyle(element);
+    function pixels(style, name) { return parseInt(style.getPropertyValue(name), 10); }
+    var width = Math.max(0, pixels(box, "width"))
+              - pixels(own, "padding-left") - pixels(own, "padding-right")
+              - (term.options.scrollback === 0 ? 0 : SCROLLBAR_LANE);
+    var height = pixels(box, "height") - pixels(own, "padding-top") - pixels(own, "padding-bottom");
+    if (isNaN(width) || isNaN(height)) { return null; }   // a box that is not laid out has no room to say
+    var dpr = window.devicePixelRatio || 1;
+    return { cols: Math.max(2, cellsIn(width, cell.width, dpr)),
+             rows: Math.max(1, cellsIn(height, cell.height, dpr)) };
+  }
+
   window.tfxFit = function () {
-    if (!term || !fit) { return; }
-    try { fit.fit(); } catch (tooSmall) { /* a zero-sized view has no size to report */ }
+    if (!term) { return; }
+    var size = fitted();
+    if (!size || (size.cols === term.cols && size.rows === term.rows)) { return; }
+    term._core._renderService.clear();
+    term.resize(size.cols, size.rows);
   };
 
   window.tfxLook = function (lookJson) {

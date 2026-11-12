@@ -22,9 +22,6 @@
       "glob": "com/kodedu/terminalfx/xterm.css"
     },
     {
-      "glob": "com/kodedu/terminalfx/addon-fit.js"
-    },
-    {
       "glob": "com/kodedu/terminalfx/addon-unicode11.js"
     },
     {

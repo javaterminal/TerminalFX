@@ -224,6 +224,41 @@ class TerminalViewTest {
     }
 
     @Test
+    @DisplayName("measures a width the same whether it comes to it from two columns or from wide")
+    void fitsTheSameFromEitherSide() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        Fx.waitUntil("it sized itself", () -> view.size().columns() > 50);
+
+        // Every width of 260 in turn, reached the way a new terminal reaches it -- up from the two
+        // columns of a page with no room -- and then down from a wider box. The fit addon's
+        // answer depended on the columns the terminal had when it was asked, so about one width
+        // in twenty-seven came out a column short from below and stayed there.
+        Object differing = Fx.ask(() -> view.getEngineForTest().executeScript("""
+                (function () {
+                  var screen = document.getElementById('screen'), differing = [];
+                  function at(width) {
+                    screen.style.width = width + 'px';
+                    window.tfxFit();
+                    return window.tfxSize();
+                  }
+                  for (var width = 500; width < 760; width++) {
+                    at(10);
+                    var fromNarrow = at(width);
+                    at(width + 300);
+                    var fromWide = at(width);
+                    if (fromNarrow !== fromWide) {
+                      differing.push(width + ' px: ' + fromNarrow + ' from narrow, ' + fromWide + ' from wide');
+                    }
+                  }
+                  screen.style.width = '';
+                  window.tfxFit();
+                  return differing.join('; ');
+                })()
+                """));
+        assertEquals("", differing, "widths measured by where the terminal came from");
+    }
+
+    @Test
     @DisplayName("hands an OSC 8 link to the embedder on Ctrl+click, and its address on hover")
     void linksReachTheEmbedder() throws Exception {
         TerminalView view = opened(TerminalLook.dark());

@@ -1,13 +1,10 @@
-The renderer in com/kodedu/terminalfx/ is xterm.js and two of its addons, vendored unmodified
+The renderer in com/kodedu/terminalfx/ is xterm.js and one of its addons, vendored unmodified
 from their npm packages. Each is under the MIT licence below, with these copyright notices.
 
 @xterm/xterm 6.0.0 (xterm.js, xterm.css)
 Copyright (c) 2017-2019, The xterm.js authors (https://github.com/xtermjs/xterm.js)
 Copyright (c) 2014-2016, SourceLair Private Company (https://www.sourcelair.com)
 Copyright (c) 2012-2013, Christopher Jeffrey (https://github.com/chjj/)
-
-@xterm/addon-fit 0.11.0 (addon-fit.js)
-Copyright (c) 2019, The xterm.js authors (https://github.com/xtermjs/xterm.js)
 
 @xterm/addon-unicode11 0.9.0 (addon-unicode11.js)
 Copyright (c) 2019, The xterm.js authors (https://github.com/xtermjs/xterm.js)

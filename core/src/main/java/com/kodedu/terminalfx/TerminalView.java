@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  *
  * <h2>Where the renderer comes from</h2>
  *
- * <p>xterm.js, its stylesheet and three addons are read out of this jar and handed to the engine
+ * <p>xterm.js, its stylesheet and one addon are read out of this jar and handed to the engine
  * as one document. Nothing is written to a temporary directory — the version this replaces
  * unpacked seven hundred kilobytes into {@code /tmp} on the first terminal of every process and
  * removed it in a shutdown hook, which is a file on disk with somebody's screen in it and a
@@ -465,7 +465,6 @@ public final class TerminalView extends Region implements TerminalScreen {
         return read("terminal.html")
                 .replace("/*XTERM_CSS*/", read("xterm.css"))
                 .replace("/*XTERM_JS*/", read("xterm.js"))
-                .replace("/*FIT_JS*/", read("addon-fit.js"))
                 .replace("/*UNICODE_JS*/", read("addon-unicode11.js"));
     }
 
