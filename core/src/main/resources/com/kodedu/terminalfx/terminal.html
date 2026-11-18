@@ -109,6 +109,16 @@
       ".xterm .xterm-scrollable-element > .scrollbar { visibility: hidden !important; }";
   }
 
+  // Ms in hex, and xterm's value for it: OSC 52 with the selection and the text as parameters.
+  var MS = "4D73";
+  var MS_VALUE = (function (value) {
+    var hex = "";
+    for (var i = 0; i < value.length; i++) {
+      hex += ("0" + value.charCodeAt(i).toString(16).toUpperCase()).slice(-2);
+    }
+    return hex;
+  })("\x1b]52;%p1%s;%p2%s\x07");
+
   var links = {
     activate: function (event, uri) {
       if (event && (event.ctrlKey || event.metaKey)) { bridge.link(String(uri)); }
@@ -127,7 +137,18 @@
       term.unicode.activeVersion = "11";
     } catch (noUnicodeAddon) { /* widths fall back to version 6 */ }
 
-    term.onData(function (data) { bridge.input(data); });
+    // What the person typed or pasted and what the terminal answers a program by itself (the
+    // cursor's position, its device attributes) both come out of onData. xterm.js tells them
+    // apart in one place: for typing, its core service fires onUserInput just before onData. An
+    // embedder that hands typing round several terminals has to know which is which, or the
+    // answer meant for one program is typed at every other prompt.
+    var typing = false;
+    term._core.coreService.onUserInput(function () { typing = true; });
+    term.onData(function (data) {
+      var typed = typing;
+      typing = false;
+      if (typed) { bridge.input(data); } else { bridge.reply(data); }
+    });
     term.onBinary(function (data) { bridge.inputBinary(data); });
     term.onResize(function (event) { bridge.resized(event.cols, event.rows); });
     term.onBell(function () { bridge.bell(); });
@@ -145,6 +166,21 @@
     term.parser.registerOscHandler(52, function (payload) {
       if (!look.allowRemoteClipboard) { return true; }
       bridge.remoteClipboard(String(payload));
+      return true;
+    });
+
+    // XTGETTCAP: a program asks what a terminfo name means here. Neovim asks for Ms, the
+    // clipboard sequence, and uses OSC 52 only when the answer is OSC 52; with no answer, "+y
+    // over SSH copied nothing. Answered while OSC 52 reaches the embedder, as xterm answers it.
+    // Any other name gets no answer, as before.
+    term.parser.registerDcsHandler({ intermediates: "+", final: "q" }, function (data) {
+      if (!look.allowRemoteClipboard) { return true; }
+      var names = String(data).split(";");
+      for (var i = 0; i < names.length; i++) {
+        if (names[i].toUpperCase() === MS) {
+          bridge.reply("\x1bP1+r" + names[i] + "=" + MS_VALUE + "\x1b\\");
+        }
+      }
       return true;
     });
 

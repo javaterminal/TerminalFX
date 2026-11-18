@@ -20,7 +20,8 @@ import java.util.function.Consumer;
  * The terminal on the screen: a {@link WebView} with xterm.js in it and nothing else.
  *
  * <p>No process, no socket, no settings store. What it draws comes from {@link #write}, what is
- * typed into it goes to {@link #onInput}, and how big it is goes to {@link #onResize}. A
+ * typed into it goes to {@link #onInput}, what it answers a program by itself goes to {@link
+ * #onReply}, and how big it is goes to {@link #onResize}. A
  * {@link TerminalSession} is what usually joins those to a {@link TerminalConnection}; this on
  * its own is enough for a page of read-only output.
  *
@@ -42,6 +43,7 @@ public final class TerminalView extends Region implements TerminalScreen {
     private final WebView web = new WebView();
     private final TerminalBridge bridge;
     private final List<Consumer<String>> input = new ArrayList<>();
+    private final List<Consumer<String>> replies = new ArrayList<>();
     private final List<Consumer<TerminalSize>> resized = new ArrayList<>();
     private final List<Runnable> bells = new ArrayList<>();
     private final List<Consumer<String>> titles = new ArrayList<>();
@@ -197,6 +199,12 @@ public final class TerminalView extends Region implements TerminalScreen {
     public Runnable onInput(Consumer<String> listener) {
         input.add(Objects.requireNonNull(listener));
         return () -> input.remove(listener);
+    }
+
+    @Override
+    public Runnable onReply(Consumer<String> listener) {
+        replies.add(Objects.requireNonNull(listener));
+        return () -> replies.remove(listener);
     }
 
     @Override
@@ -403,6 +411,11 @@ public final class TerminalView extends Region implements TerminalScreen {
         @Override
         public void input(String text) {
             input.forEach(listener -> listener.accept(text));
+        }
+
+        @Override
+        public void reply(String text) {
+            replies.forEach(listener -> listener.accept(text));
         }
 
         @Override

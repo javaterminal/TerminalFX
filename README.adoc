@@ -5,10 +5,25 @@ Rahman Usta
 :lang: en
 :toc: left
 :numbered:
-:terminalfx-version: 2.0.6
+:terminalfx-version: 2.0.7
 
 A terminal for JavaFX applications: the screen, and a contract for whatever is on the other end
 of it.
+
+== What changed in 2.0.7
+
+What a terminal answers a program by itself is no longer handed over as typing. A program asks its
+terminal where the cursor is (DSR 6), what it is (DA1) or what a terminfo name means (XTGETTCAP),
+and xterm.js answers through the same event as a keystroke. An embedder that sends typing to
+several terminals at once sent those answers too, and the other terminals' shells were typed
+`^[[1;1R^[[?1;2c` at their prompts. The answers now come to `TerminalScreen.onReply`, and
+`TerminalSession` sends them to its own connection as before; `onInput` hears only what the person
+typed or pasted. An embedder with its own `TerminalScreen` implements `onReply`.
+
+The terminal answers XTGETTCAP for `Ms`, the clipboard capability, with xterm's OSC 52, while
+`TerminalLook.allowRemoteClipboard` is on. Neovim uses its OSC 52 clipboard only when the terminal
+says so: before this, `"+y` in Neovim over SSH copied nothing unless its configuration named OSC 52
+itself. Other capability names are not answered, as before.
 
 == What changed in 2.0.6
 

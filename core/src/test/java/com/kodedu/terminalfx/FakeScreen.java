@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 final class FakeScreen implements TerminalScreen {
 
     private final List<Consumer<String>> input = new ArrayList<>();
+    private final List<Consumer<String>> replies = new ArrayList<>();
     private final List<Consumer<TerminalSize>> resized = new ArrayList<>();
     private final List<Runnable> waiting = new ArrayList<>();
     private final StringBuilder drawn = new StringBuilder();
@@ -45,6 +46,12 @@ final class FakeScreen implements TerminalScreen {
     }
 
     @Override
+    public Runnable onReply(Consumer<String> listener) {
+        replies.add(listener);
+        return () -> replies.remove(listener);
+    }
+
+    @Override
     public Runnable onResize(Consumer<TerminalSize> listener) {
         resized.add(listener);
         return () -> resized.remove(listener);
@@ -52,7 +59,7 @@ final class FakeScreen implements TerminalScreen {
 
     /** How many are still listening, for a test about what a closed session lets go of. */
     int listeners() {
-        return input.size() + resized.size();
+        return input.size() + replies.size() + resized.size();
     }
 
     void becomeReady() {
@@ -63,6 +70,10 @@ final class FakeScreen implements TerminalScreen {
 
     void type(String text) {
         List.copyOf(input).forEach(listener -> listener.accept(text));
+    }
+
+    void reply(String text) {
+        List.copyOf(replies).forEach(listener -> listener.accept(text));
     }
 
     void resizeTo(TerminalSize next) {

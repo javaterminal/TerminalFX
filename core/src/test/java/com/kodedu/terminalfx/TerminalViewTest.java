@@ -433,6 +433,58 @@ class TerminalViewTest {
         assertTrue(allowed.get(0).contains("aGVsbG8="), allowed.get(0));
     }
 
+    /**
+     * A program's question to its terminal is answered through onData, as typing is. An embedder
+     * that hands typing round a group of terminals typed the cursor's position and the device
+     * attributes at every other prompt.
+     */
+    @Test
+    @DisplayName("tells the terminal's own answers to a program apart from what is typed")
+    void repliesAreNotTyping() throws Exception {
+        TerminalView view = opened(TerminalLook.dark());
+        List<String> typed = new java.util.concurrent.CopyOnWriteArrayList<>();
+        List<String> replied = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Fx.run(() -> {
+            view.onInput(typed::add);
+            view.onReply(replied::add);
+        });
+
+        Fx.run(() -> view.write("\u001b[6n\u001b[c"));
+        Fx.waitUntil("both answers", () -> String.join("", replied).contains("c"));
+        assertEquals("\u001b[1;1R\u001b[?1;2c", String.join("", replied), "the cursor at home, and a VT100 with AVO");
+        assertEquals(List.of(), typed, "nobody typed them");
+
+        Fx.run(() -> view.paste("ls"));
+        Fx.waitUntil("the paste", () -> !typed.isEmpty());
+        assertEquals(List.of("ls"), typed);
+        assertEquals(2, replied.size(), "and a paste is typing");
+    }
+
+    /**
+     * XTGETTCAP. Neovim uses its OSC 52 clipboard only when the terminal says Ms is OSC 52; with
+     * no answer, "+y in an SSH session copied nothing.
+     */
+    @Test
+    @DisplayName("says its clipboard sequence when asked by terminfo name, only while OSC 52 reaches the embedder")
+    void saysItsClipboardSequence() throws Exception {
+        String asked = "\u001bP+q4d73\u001b\\\u001bP+q5463\u001b\\";
+        TerminalView off = opened(TerminalLook.dark());
+        List<String> offReplies = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Fx.run(() -> off.onReply(offReplies::add));
+        Fx.run(() -> off.write(asked + "drawn\r\n"));
+        Fx.waitUntil("the output after it", () -> off.screenText().contains("drawn"));
+        assertEquals(List.of(), offReplies, "no clipboard, nothing said about one");
+
+        TerminalView on = opened(TerminalLook.dark().withAllowRemoteClipboard(true));
+        List<String> onReplies = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Fx.run(() -> on.onReply(onReplies::add));
+        Fx.run(() -> on.write(asked + "drawn\r\n"));
+        Fx.waitUntil("the output after it", () -> on.screenText().contains("drawn"));
+        // ESC ] 5 2 ; % p 1 % s ; % p 2 % s BEL, in hex: xterm's Ms.
+        assertEquals(List.of("\u001bP1+r4d73=1B5D35323B25703125733B257032257307\u001b\\"), onReplies,
+                "Ms named as OSC 52, and Tc, which it does not answer, left as before");
+    }
+
     @Test
     @DisplayName("a megabyte of output is text, never script")
     void outputIsNeverParsed() throws Exception {

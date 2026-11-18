@@ -232,6 +232,24 @@ class TerminalSessionTest {
     }
 
     @Test
+    @DisplayName("sends the terminal's own answers to the program as well, in order with the typing")
+    void repliesGoToTheProgram() throws Exception {
+        FakeScreen screen = new FakeScreen();
+        screen.becomeReady();
+        FakeConnection connection = new FakeConnection();
+        TerminalSession session = session(screen, connection);
+        startAndWait(session);
+        drainUi();
+
+        screen.type("a");
+        screen.reply("\u001b[1;1R");
+        screen.type("b");
+        waitFor(() -> connection.sent().size() == 3);
+        assertEquals("a\u001b[1;1Rb", String.join("", connection.sent()));
+        session.close();
+    }
+
+    @Test
     @DisplayName("says so rather than dropping a keystroke when the far end stops reading")
     void theQueueIsBoundedAndSaysSo() throws Exception {
         {
@@ -381,11 +399,11 @@ class TerminalSessionTest {
         FakeConnection connection = new FakeConnection();
         TerminalSession session = session(screen, connection);
         int listening = screen.listeners();
-        assertTrue(listening >= 2, "it listens for input and for size");
+        assertTrue(listening >= 3, "it listens for input, for the terminal's replies and for size");
 
         session.close();
 
         assertEquals(0, screen.listeners(),
-                "and gives both back, so the next session over this screen is the only one");
+                "and gives them all back, so the next session over this screen is the only one");
     }
 }

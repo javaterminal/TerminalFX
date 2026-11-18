@@ -36,6 +36,16 @@ public interface TerminalScreen {
      */
     Runnable onInput(Consumer<String> listener);
 
+    /**
+     * Tells this listener what the terminal answers a program by itself: the cursor's position,
+     * the device attributes, a terminfo capability. It goes to the program that asked, as typing
+     * does, but nobody typed it: an embedder that hands typing round several terminals must not
+     * hand this round with it.
+     *
+     * @return how to stop listening, as {@link #onInput}
+     */
+    Runnable onReply(Consumer<String> listener);
+
     /** The screen changed size — which is what the far end has to be told. */
     /** As {@link #onInput}, for the size. */
     Runnable onResize(Consumer<TerminalSize> listener);

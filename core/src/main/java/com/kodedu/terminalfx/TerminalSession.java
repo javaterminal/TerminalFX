@@ -106,6 +106,8 @@ public final class TerminalSession implements AutoCloseable {
         // as the tab is open -- which for a terminal somebody works in is all day.
         this.stopListening = List.of(
                 view.onInput(this::send),
+                // The terminal's own answers to the program go the same way, to the same program.
+                view.onReply(this::send),
                 view.onResize(size -> {
                     pendingResize.set(size);
                     if (transportReady.get()) {

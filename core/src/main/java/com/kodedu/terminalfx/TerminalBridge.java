@@ -17,6 +17,8 @@ public final class TerminalBridge {
 
         void input(String text);
 
+        void reply(String text);
+
         void resized(int columns, int rows);
 
         void bell();
@@ -48,6 +50,14 @@ public final class TerminalBridge {
 
     public void input(String text) {
         listener.input(text);
+    }
+
+    /**
+     * What the terminal answers a program by itself: where the cursor is, what kind of terminal
+     * it is, what a terminfo name means. Not typed by anybody.
+     */
+    public void reply(String text) {
+        listener.reply(text);
     }
 
     /** Bytes the page sends as a string of code points 0–255, which is what xterm.js gives. */
